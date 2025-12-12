@@ -1,25 +1,44 @@
-'use client';
+"use client";
 
-import { useReadContract } from 'wagmi';
-import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI, POLL_ABI } from '@/lib/contracts';
-import { useState, useEffect } from 'react';
-import { getTimeRemaining } from '@/lib/calculations';
+import { useReadContract } from "wagmi";
+import {
+  POLL_FACTORY_ADDRESS,
+  POLL_FACTORY_ABI,
+  POLL_ABI,
+} from "@/lib/contracts";
+import { useState, useEffect } from "react";
+import { getTimeRemaining } from "@/lib/calculations";
 
 interface PollListProps {
   onSelectPoll: (pollAddress: string, options: string[]) => void;
+  refreshTrigger?: number; // Add this to force refresh from parent
 }
 
-export function PollList({ onSelectPoll }: PollListProps) {
-  const [selectedPollIndex, setSelectedPollIndex] = useState<number | null>(null);
+export function PollList({ onSelectPoll, refreshTrigger }: PollListProps) {
+  const [selectedPollIndex, setSelectedPollIndex] = useState<number | null>(
+    null
+  );
 
-  // Fetch recent polls
+  // Fetch recent polls with query configuration
   const { data: recentPolls, refetch } = useReadContract({
     address: POLL_FACTORY_ADDRESS,
     abi: POLL_FACTORY_ABI,
-    functionName: 'getRecentPolls',
+    functionName: "getRecentPolls",
     args: [10n],
+    query: {
+      refetchInterval: 10000, // Refetch every 10 seconds
+      staleTime: 5000, // Consider data stale after 5 seconds
+    },
   });
 
+  // Refetch when refreshTrigger changes (from parent)
+  useEffect(() => {
+    if (refreshTrigger !== undefined) {
+      refetch();
+    }
+  }, [refreshTrigger, refetch]);
+
+  // Auto-refetch interval
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
@@ -44,7 +63,7 @@ export function PollList({ onSelectPoll }: PollListProps) {
       <div className="grid gap-4">
         {recentPolls.map((pollAddress, index) => (
           <PollCard
-            key={pollAddress}
+            key={`${pollAddress}-${index}`}
             pollAddress={pollAddress}
             index={index}
             isSelected={selectedPollIndex === index}
@@ -70,35 +89,43 @@ function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
   const { data: pollInfo } = useReadContract({
     address: POLL_FACTORY_ADDRESS,
     abi: POLL_FACTORY_ABI,
-    functionName: 'getPollInfo',
+    functionName: "getPollInfo",
     args: [pollAddress as `0x${string}`],
+    query: {
+      refetchInterval: 10000,
+    },
   });
 
   const { data: totalVoters } = useReadContract({
     address: pollAddress as `0x${string}`,
     abi: POLL_ABI,
-    functionName: 'totalVoters',
+    functionName: "totalVoters",
+    query: {
+      refetchInterval: 10000,
+    },
   });
 
   if (!pollInfo) return null;
 
   const [question, options, endTime, isActive] = pollInfo;
   const timeRemaining = getTimeRemaining(endTime);
-  const isEnded = timeRemaining === 'Ended';
+  const isEnded = timeRemaining === "Ended";
 
   return (
     <div
       onClick={() => onSelect(options)}
       className={`bg-white/5 backdrop-blur-lg rounded-xl p-6 border transition-all cursor-pointer ${
         isSelected
-          ? 'border-indigo-500 shadow-lg shadow-indigo-500/30 scale-[1.02]'
-          : 'border-white/10 hover:border-white/20 hover:bg-white/10'
+          ? "border-indigo-500 shadow-lg shadow-indigo-500/30 scale-[1.02]"
+          : "border-white/10 hover:border-white/20 hover:bg-white/10"
       }`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-mono text-gray-500">#{index + 1}</span>
+            <span className="text-sm font-mono text-gray-500">
+              #{index + 1}
+            </span>
             {isEnded ? (
               <span className="px-2 py-0.5 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-400">
                 Ended
@@ -118,19 +145,22 @@ function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
         <div className="flex items-center gap-4">
           <div>
             <span className="text-gray-500">Voters: </span>
-            <span className="text-indigo-400 font-semibold">{totalVoters?.toString() || '0'}</span>
+            <span className="text-indigo-400 font-semibold">
+              {totalVoters?.toString() || "0"}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Ends: </span>
-            <span className={isEnded ? 'text-red-400' : 'text-green-400'}>{timeRemaining}</span>
+            <span className={isEnded ? "text-red-400" : "text-green-400"}>
+              {timeRemaining}
+            </span>
           </div>
         </div>
         <button className="text-indigo-400 hover:text-indigo-300 transition-colors font-semibold">
-          {isSelected ? 'Selected ✓' : 'View →'}
+          {isSelected ? "Selected ✓" : "View →"}
         </button>
       </div>
     </div>
   );
 }
-
 

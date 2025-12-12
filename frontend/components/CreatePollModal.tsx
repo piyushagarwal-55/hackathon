@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 interface CreatePollModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (pollAddress: string) => void;
+  onSuccess: () => void; // Changed to just trigger refetch
 }
 
 export function CreatePollModal({
@@ -21,10 +21,30 @@ export function CreatePollModal({
   const [duration, setDuration] = useState(7); // days
   const [maxWeightCap, setMaxWeightCap] = useState(10);
 
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContract, data: hash, isPending, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
+
+  // Handle successful poll creation
+  useEffect(() => {
+    if (isSuccess && hash) {
+      toast.success("Poll created successfully!");
+
+      // Wait a bit for the blockchain to propagate
+      setTimeout(() => {
+        onSuccess(); // Trigger refetch in parent
+        onClose();
+
+        // Reset form
+        setQuestion("");
+        setOptions(["", ""]);
+        setDuration(7);
+        setMaxWeightCap(10);
+        reset();
+      }, 2000); // 2 second delay for blockchain propagation
+    }
+  }, [isSuccess, hash, onSuccess, onClose, reset]);
 
   const addOption = () => {
     if (options.length < 10) {
@@ -76,18 +96,6 @@ export function CreatePollModal({
       toast.error(error.message || "Failed to create poll");
     }
   };
-
-  if (isSuccess) {
-    setTimeout(() => {
-      toast.success("Poll created successfully!");
-      onClose();
-      // Reset form
-      setQuestion("");
-      setOptions(["", ""]);
-      setDuration(7);
-      setMaxWeightCap(10);
-    }, 1000);
-  }
 
   if (!isOpen) return null;
 
@@ -217,13 +225,14 @@ export function CreatePollModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 hover:bg-white/10 transition-colors font-semibold"
+                disabled={isPending || isConfirming}
+                className="flex-1 px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 hover:bg-white/10 transition-colors font-semibold disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isPending || isConfirming}
+                disabled={isPending || isConfirming || isSuccess}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl text-white hover:shadow-lg hover:shadow-indigo-500/50 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPending

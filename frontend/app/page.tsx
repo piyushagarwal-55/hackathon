@@ -27,6 +27,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<
     "vote" | "leaderboard" | "history"
   >("vote");
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add refresh trigger
 
   // Fetch recent polls
   const { data: recentPolls } = useReadContract({
@@ -35,6 +36,12 @@ export default function Home() {
     functionName: "getRecentPolls",
     args: [5n],
   });
+
+  // Handle poll creation success
+  const handlePollCreated = () => {
+    console.log("Poll created successfully, refreshing list...");
+    setRefreshTrigger((prev) => prev + 1); // Trigger refresh in PollList
+  };
 
   // Demo options
   const demoOptions = ["Security Audit", "Mobile App Development", "UX Polish"];
@@ -171,6 +178,7 @@ export default function Home() {
                 onSelectPoll={(address, options) =>
                   setSelectedPoll({ address, options })
                 }
+                refreshTrigger={refreshTrigger}
               />
             </div>
 
@@ -304,10 +312,7 @@ export default function Home() {
       <CreatePollModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={(pollAddress) => {
-          console.log("Poll created:", pollAddress);
-          // Optionally auto-select the new poll
-        }}
+        onSuccess={handlePollCreated}
       />
     </div>
   );
