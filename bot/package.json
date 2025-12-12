@@ -1,0 +1,20 @@
+{
+  "name": "repvote-hunter-bot",
+  "version": "1.0.0",
+  "description": "Sybil attack detection bot for RepVote",
+  "main": "hunter.js",
+  "scripts": {
+    "start": "node hunter.js",
+    "dev": "nodemon hunter.js"
+  },
+  "keywords": ["blockchain", "sybil", "detection", "voting"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.9.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
