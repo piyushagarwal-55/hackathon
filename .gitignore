@@ -6,9 +6,6 @@ node_modules/
 
 # Foundry / Solidity
 cache/
-out/
-lib/
-broadcast/
 
 # Next.js
 .next/
