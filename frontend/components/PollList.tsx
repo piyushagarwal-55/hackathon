@@ -164,3 +164,4 @@ function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
   );
 }
 
+
