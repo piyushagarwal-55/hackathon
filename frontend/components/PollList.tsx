@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { getTimeRemaining } from "@/lib/calculations";
 import { Share2 } from "lucide-react";
 import { PollCardSkeleton } from "./SkeletonLoader";
+import { getCategoryFromQuestion, getCategoryById, CategoryId } from "@/lib/categories";
 
 interface PollListProps {
   onSelectPoll: (pollAddress: string, options: string[], question?: string) => void;
@@ -19,6 +20,7 @@ interface PollListProps {
   filterStatus?: 'all' | 'active' | 'ended';
   filterPopularity?: 'all' | 'popular' | 'new';
   sortBy?: 'recent' | 'votes' | 'ending';
+  filterCategory?: CategoryId | 'all';
 }
 
 export function PollList({ 
@@ -28,7 +30,8 @@ export function PollList({
   searchQuery = '',
   filterStatus = 'all',
   filterPopularity = 'all',
-  sortBy = 'recent'
+  sortBy = 'recent',
+  filterCategory = 'all'
 }: PollListProps) {
   const [selectedPollIndex, setSelectedPollIndex] = useState<number | null>(
     null
@@ -61,6 +64,9 @@ export function PollList({
   }, [refreshTrigger, refetch]);
 
   // Filter and sort polls
+  // Note: Category filtering is implemented at the card level via getCategoryFromQuestion
+  // The actual filtering by category needs contract-level support or client-side filtering
+  // after fetching all poll questions. For now, polls are displayed with category badges.
   useEffect(() => {
     if (!recentPolls || recentPolls.length === 0) {
       setFilteredPolls([]);
@@ -69,7 +75,7 @@ export function PollList({
     
     let polls = [...recentPolls];
     setFilteredPolls(polls);
-  }, [recentPolls, searchQuery, filterStatus, filterPopularity, sortBy]);
+  }, [recentPolls, searchQuery, filterStatus, filterPopularity, sortBy, filterCategory]);
 
   if (isLoading) {
     return (
@@ -136,6 +142,7 @@ export function PollList({
           }}
           onShare={onShare}
           searchQuery={searchQuery}
+          onCategoryClick={() => {}} // Will be wired up from parent
         />
       ))}
     </div>
@@ -149,9 +156,10 @@ interface PollCardProps {
   onSelect: (options: string[], question: string) => void;
   onShare?: (pollAddress: string, pollQuestion: string) => void;
   searchQuery?: string;
+  onCategoryClick?: (category: CategoryId) => void;
 }
 
-function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQuery }: PollCardProps) {
+function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQuery, onCategoryClick }: PollCardProps) {
   // Fetch poll data directly from the Poll contract
   const { data: question } = useReadContract({
     address: pollAddress as `0x${string}`,
@@ -187,11 +195,22 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
 
   const timeRemaining = endTime ? getTimeRemaining(endTime) : "Unknown";
   const isEnded = timeRemaining === "Ended";
+  
+  // Get category from question
+  const categoryId = getCategoryFromQuestion(question as string);
+  const category = getCategoryById(categoryId);
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering poll selection
     if (onShare && question) {
       onShare(pollAddress, question as string);
+    }
+  };
+  
+  const handleCategoryClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering poll selection
+    if (onCategoryClick) {
+      onCategoryClick(categoryId);
     }
   };
 
@@ -212,7 +231,7 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
 
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {/* Status Badge */}
+          {/* Status Badge and Category */}
           <div className="flex items-center gap-2 mb-2">
             {isEnded ? (
               <span className="px-2 py-0.5 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-400 font-medium">
@@ -224,6 +243,13 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
                 Live
               </span>
             )}
+            <button
+              onClick={handleCategoryClick}
+              className={`px-2 py-0.5 ${category.bgColor} border ${category.borderColor} rounded text-xs ${category.color} font-medium flex items-center gap-1 hover:opacity-80 transition-opacity`}
+            >
+              <span>{category.icon}</span>
+              <span>{category.name}</span>
+            </button>
             <span className="text-xs text-slate-500">#{index + 1}</span>
           </div>
 

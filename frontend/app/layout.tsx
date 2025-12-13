@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "sonner";
+import { Toaster as HotToaster } from "react-hot-toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,6 +34,28 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster position="top-right" theme="dark" />
+          <HotToaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: '#1e293b',
+                color: '#fff',
+                border: '1px solid #334155',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </Providers>
       </body>
     </html>

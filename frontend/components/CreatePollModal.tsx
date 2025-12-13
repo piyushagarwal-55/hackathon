@@ -28,6 +28,7 @@ export function CreatePollModal({
   const [question, setQuestion] = useState(initialQuestion);
   const [options, setOptions] = useState(initialOptions);
   const [duration, setDuration] = useState(initialDuration);
+  const [durationUnit, setDurationUnit] = useState<'minutes' | 'hours' | 'days'>('minutes');
   const [maxWeightCap, setMaxWeightCap] = useState(initialMaxWeightCap);
   const [votingMethod, setVotingMethod] = useState<0 | 1 | 2>(0); // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
   const [isVotingMethodLocked, setIsVotingMethodLocked] = useState(false);
@@ -45,7 +46,8 @@ export function CreatePollModal({
     didInitOnOpenRef.current = true;
     setQuestion(initialQuestion);
     setOptions(initialOptions.length >= 2 ? initialOptions : ["", ""]);
-    setDuration(initialDuration);
+    setDuration(1); // Default to 1 minute for quick testing
+    setDurationUnit('minutes');
     setMaxWeightCap(initialMaxWeightCap);
   }, [isOpen, initialQuestion, initialOptions, initialDuration, initialMaxWeightCap]);
 
@@ -71,7 +73,8 @@ export function CreatePollModal({
           // Reset form
           setQuestion("");
           setOptions(["", ""]);
-          setDuration(7);
+          setDuration(1);
+          setDurationUnit('minutes');
           setMaxWeightCap(10);
           reset();
         }, 500);
@@ -112,6 +115,12 @@ export function CreatePollModal({
     }
 
     try {
+      // Calculate duration in seconds based on unit
+      const durationInSeconds = 
+        durationUnit === 'minutes' ? duration * 60 :
+        durationUnit === 'hours' ? duration * 60 * 60 :
+        duration * 24 * 60 * 60; // days
+
       writeContract({
         address: POLL_FACTORY_ADDRESS,
         abi: POLL_FACTORY_ABI,
@@ -119,7 +128,7 @@ export function CreatePollModal({
         args: [
           question,
           validOptions,
-          BigInt(duration * 24 * 60 * 60), // Convert days to seconds
+          BigInt(durationInSeconds),
           BigInt(maxWeightCap),
           votingMethod, // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
           isVotingMethodLocked, // true=locked, false=voter choice
@@ -246,14 +255,25 @@ export function CreatePollModal({
                   <label className="text-slate-200 text-sm font-medium">
                     Market Duration
                   </label>
-                  <span className="text-emerald-400 font-semibold">
-                    {duration} {duration === 1 ? "day" : "days"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 font-semibold">
+                      {duration} {duration === 1 ? durationUnit.slice(0, -1) : durationUnit}
+                    </span>
+                    <select
+                      value={durationUnit}
+                      onChange={(e) => setDurationUnit(e.target.value as 'minutes' | 'hours' | 'days')}
+                      className="px-2 py-1 bg-slate-800/50 border border-slate-700 rounded text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    >
+                      <option value="minutes">Minutes</option>
+                      <option value="hours">Hours</option>
+                      <option value="days">Days</option>
+                    </select>
+                  </div>
                 </div>
                 <input
                   type="range"
                   min="1"
-                  max="30"
+                  max={durationUnit === 'minutes' ? 60 : durationUnit === 'hours' ? 24 : 30}
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
                   className="w-full h-2 bg-slate-700/50 rounded-lg appearance-none cursor-pointer 
@@ -263,8 +283,8 @@ export function CreatePollModal({
                            [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-emerald-500/50"
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-2">
-                  <span>1 day</span>
-                  <span>30 days</span>
+                  <span>1 {durationUnit.slice(0, -1)}</span>
+                  <span>{durationUnit === 'minutes' ? '60 min' : durationUnit === 'hours' ? '24 hr' : '30 days'}</span>
                 </div>
               </div>
 

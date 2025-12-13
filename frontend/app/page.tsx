@@ -17,6 +17,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { NetworkHealth } from "@/components/NetworkHealth";
 import { Navigation } from "@/components/Navigation";
 import { OnboardingTooltip } from "@/components/OnboardingTooltip";
+import { CategoryFilter } from "@/components/CategoryFilter";
+import { CategoryId } from "@/lib/categories";
 
 // Demo poll address - Create your first poll using the "Create Poll" button!
 // Once created, you can paste the address here or select from PollList
@@ -38,6 +40,7 @@ export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'ended'>('all');
   const [filterPopularity, setFilterPopularity] = useState<'all' | 'popular' | 'new'>('all');
+  const [filterCategory, setFilterCategory] = useState<CategoryId | 'all'>('all');
   const [sortBy, setSortBy] = useState<'recent' | 'votes' | 'ending'>('recent');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -97,10 +100,20 @@ export default function Home() {
           <RepDisplay />
         </div>
 
-        {/* Unified Dashboard - 2 Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-          {/* Left Column - Active Markets (60% - 2 cols) */}
-          <div className="lg:col-span-2 space-y-6 animate-slide-up">
+        {/* Unified Dashboard - Dynamic Layout */}
+        <div className={`animate-fade-in ${selectedPoll ? '' : 'grid grid-cols-1 lg:grid-cols-3 gap-6'}`}>
+          {/* Left Column - Active Markets */}
+          <div className={`space-y-6 animate-slide-up ${selectedPoll ? '' : 'lg:col-span-2'}`}>
+            {/* Category Filter */}
+            {!selectedPoll && (
+              <div className="animate-fade-in">
+                <CategoryFilter 
+                  selectedCategory={filterCategory}
+                  onCategoryChange={setFilterCategory}
+                />
+              </div>
+            )}
+            
             {/* Search & Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between animate-fade-in">
               <div className="relative flex-1 max-w-md">
@@ -295,12 +308,25 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Markets Header */}
+            {/* Markets Header with Back Button */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-emerald-400" />
-                Active Markets
-              </h2>
+              <div className="flex items-center gap-3">
+                {selectedPoll && (
+                  <button
+                    onClick={() => setSelectedPoll(null)}
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 border border-slate-700/60 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/70 transition-all group"
+                  >
+                    <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="text-sm font-medium hidden sm:inline">Back</span>
+                  </button>
+                )}
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-emerald-400" />
+                  {selectedPoll ? "Market Details" : "Active Markets"}
+                </h2>
+              </div>
               <span className="text-sm text-slate-400">
                 {pollCount?.toString() ?? "0"} markets
               </span>
@@ -308,12 +334,41 @@ export default function Home() {
 
             {/* Selected Poll - Full Width Polymarket Style */}
             {selectedPoll ? (
-              <PolymarketStyleVote
-                pollAddress={selectedPoll.address as `0x${string}`}
-                options={selectedPoll.options}
-                question={selectedPoll.question || "Market Question"}
-                onVoteSuccess={handleVoteSuccess}
-              />
+              <>
+                <PolymarketStyleVote
+                  pollAddress={selectedPoll.address as `0x${string}`}
+                  options={selectedPoll.options}
+                  question={selectedPoll.question || "Market Question"}
+                  onVoteSuccess={handleVoteSuccess}
+                />
+                
+                {/* Other Markets Section - Below Current Market */}
+                <div className="mt-12 pt-8 border-t border-slate-800/50">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      🔍 Explore Other Markets
+                    </h3>
+                    <button
+                      onClick={() => setSelectedPoll(null)}
+                      className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                    >
+                      View All →
+                    </button>
+                  </div>
+                  <PollList
+                    onSelectPoll={(address, options, question) =>
+                      setSelectedPoll({ address, options, question })
+                    }
+                    refreshTrigger={refreshTrigger}
+                    onShare={handleShare}
+                    searchQuery={searchQuery}
+                    filterStatus={filterStatus}
+                    filterPopularity={filterPopularity}
+                    sortBy={sortBy}
+                    filterCategory={filterCategory}
+                  />
+                </div>
+              </>
             ) : (
               /* Market List */
               <PollList
@@ -326,6 +381,7 @@ export default function Home() {
                 filterStatus={filterStatus}
                 filterPopularity={filterPopularity}
                 sortBy={sortBy}
+                filterCategory={filterCategory}
               />
             )}
           </div>

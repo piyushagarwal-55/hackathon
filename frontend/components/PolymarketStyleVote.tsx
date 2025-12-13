@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { MarketChart } from './MarketChart';
 import { TokenFaucet } from './TokenFaucet';
 import { ClaimWinnings } from './ClaimWinnings';
+import { ShareButton } from './ShareButton';
 import { parseUnits, formatUnits } from 'viem';
 
 interface PolymarketStyleVoteProps {
@@ -347,7 +348,14 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
         <div className="bg-[#131a22] backdrop-blur-sm rounded-xl p-6 border border-slate-800/40">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white mb-3">{question}</h1>
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h1 className="text-2xl font-bold text-white flex-1">{question}</h1>
+                <ShareButton
+                  marketQuestion={question}
+                  marketAddress={pollAddress}
+                  currentOdds={percentages.length >= 2 ? { yes: percentages[0], no: percentages[1] } : undefined}
+                />
+              </div>
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400">Prize Pool:</span>
