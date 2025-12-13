@@ -68,24 +68,26 @@ export function CreatePollModal({
   useEffect(() => {
     if (isSuccess && hash) {
       console.log("Poll creation transaction confirmed! Hash:", hash);
-      toast.success("Poll created successfully!");
+      toast.success("Poll created successfully! Refreshing...");
 
-      // Immediately trigger refresh and close
-      console.log("Poll created! Refreshing list...");
-      onSuccess(); // Trigger refetch in parent
-
-      // Small delay to show success before closing
+      // Wait a bit longer to ensure the blockchain state is updated
       setTimeout(() => {
-        onClose();
+        console.log("Triggering poll list refresh...");
+        onSuccess(); // Trigger refetch in parent
+        
+        // Close modal and reset after triggering refresh
+        setTimeout(() => {
+          onClose();
 
-        // Reset form
-        setQuestion("");
-        setOptions(["", ""]);
-        setDuration(1);
-        setDurationUnit("minutes");
-        setMaxWeightCap(10);
-        reset();
-      }, 1500); // 1.5 second delay to show success message
+          // Reset form
+          setQuestion("");
+          setOptions(["", ""]);
+          setDuration(1);
+          setDurationUnit("minutes");
+          setMaxWeightCap(10);
+          reset();
+        }, 500);
+      }, 1000); // Wait 1 second for blockchain to update
     }
   }, [isSuccess, hash, onSuccess, onClose, reset]);
 

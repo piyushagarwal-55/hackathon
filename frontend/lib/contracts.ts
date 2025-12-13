@@ -3,13 +3,13 @@
  * Update these after deploying contracts to Sepolia
  */
 
-// Deployed contract addresses (Arbitrum Sepolia Testnet)
+// Deployed contract addresses (Local Anvil)
 export const MOCK_TOKEN_ADDRESS =
-  "0x0000000000000000000000000000000000000000" as `0x${string}`; // Update after deployment
+  "0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519" as `0x${string}`;
 export const REPUTATION_REGISTRY_ADDRESS =
-  "0x45b836A4a501699d428119D481186804ACeD9C9C" as `0x${string}`;
+  "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496" as `0x${string}`;
 export const POLL_FACTORY_ADDRESS =
-  "0xdAbBF35331822FFf0C0c2B56EaE2d0cdeC4971A4" as `0x${string}`;
+  "0x34A1D3fff3958843C43aD80F30b94c510645C316" as `0x${string}`;
 
 // ABIs - Essential functions only
 export const REPUTATION_REGISTRY_ABI = [

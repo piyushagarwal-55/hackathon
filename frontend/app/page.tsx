@@ -12,7 +12,7 @@ import { VotingHistory } from "@/components/VotingHistory";
 import { useReadContract, useAccount } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { useState, useEffect, useRef } from "react";
-import { TrendingUp, Plus, Search, Filter, BarChart3, Clock, Users } from "lucide-react";
+import { TrendingUp, Plus, Search, Filter, BarChart3, Clock, Users, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { NetworkHealth } from "@/components/NetworkHealth";
 import { Navigation } from "@/components/Navigation";
@@ -116,23 +116,32 @@ export default function Home() {
             
             {/* Search & Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between animate-fade-in">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search markets..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                  >
-                    ✕
-                  </button>
-                )}
+              <div className="flex gap-2 flex-1 max-w-md">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search markets..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => handlePollCreated()}
+                  className="px-3 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-slate-300 hover:text-white hover:border-emerald-500/60 transition-all group"
+                  title="Refresh markets"
+                >
+                  <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                </button>
               </div>
               <div className="flex gap-2">
                 {/* Filter Button with Dropdown */}

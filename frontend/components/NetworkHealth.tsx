@@ -13,8 +13,14 @@ export function NetworkHealth() {
     },
   });
 
-  const [lastSuccessTime, setLastSuccessTime] = useState<number>(Date.now());
+  const [lastSuccessTime, setLastSuccessTime] = useState<number | null>(null);
   const [isHealthy, setIsHealthy] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setLastSuccessTime(Date.now());
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isError && blockNumber) {
@@ -25,10 +31,11 @@ export function NetworkHealth() {
     }
   }, [blockNumber, isLoading, isError]);
 
-  const timeSinceLastSuccess = Math.floor((Date.now() - lastSuccessTime) / 1000);
+  const timeSinceLastSuccess = lastSuccessTime ? Math.floor((Date.now() - lastSuccessTime) / 1000) : 0;
   const isDegraded = timeSinceLastSuccess > 30; // More than 30 seconds since last success
 
-  if (!chain) {
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!isMounted || !chain) {
     return null;
   }
 

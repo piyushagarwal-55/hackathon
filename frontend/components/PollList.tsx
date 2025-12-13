@@ -74,7 +74,11 @@ export function PollList({
   useEffect(() => {
     if (refreshTrigger !== undefined && refreshTrigger > 0) {
       console.log("🔄 Refetching polls due to trigger:", refreshTrigger);
-      refetch();
+      // Add a small delay to allow the transaction to be mined and indexed
+      const timer = setTimeout(() => {
+        refetch();
+      }, 1000); // 1 second delay
+      return () => clearTimeout(timer);
     }
   }, [refreshTrigger, refetch]);
 
