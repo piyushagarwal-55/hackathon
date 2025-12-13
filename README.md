@@ -4,7 +4,103 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Hackathon](https://img.shields.io/badge/Unstoppable-Hackathon%202025-blue)](https://docs.stability.nexus/about-us/unstoppable-hackathon)
-[![Status](https://img.shields.io/badge/Status-Planning-orange)]()
+[![Status](https://img.shields.io/badge/Status-Active-success)]()
+
+---
+
+## 🚀 Quick Setup for Teammates
+
+### Prerequisites
+- **Node.js** v18+ ([Download](https://nodejs.org/))
+- **Foundry** ([Install](https://book.getfoundry.sh/getting-started/installation))
+- **WSL2** (Windows users only - [Setup Guide](https://learn.microsoft.com/en-us/windows/wsl/install))
+- **Git**
+
+### Step 1: Clone Repository
+```bash
+git clone https://github.com/AmrendraTheCoder/mcz.git
+cd mcz
+```
+
+### Step 2: Install Dependencies
+
+**Contracts:**
+```bash
+cd contracts
+forge install
+cd ..
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+### Step 3: Start Local Blockchain (Anvil)
+
+**Windows (PowerShell):**
+```powershell
+.\start-dev.ps1
+```
+
+**Mac/Linux:**
+```bash
+wsl bash -c "anvil --host 0.0.0.0 --block-time 1"
+```
+
+This will:
+- Start Anvil on port 8545 with auto-mining (1 second blocks)
+- Set up WSL port forwarding (Windows only)
+
+### Step 4: Deploy Contracts
+
+Open a **new terminal** and run:
+
+```bash
+cd contracts
+wsl bash -c "forge script script/DeployLocal.s.sol:DeployLocalScript --broadcast --rpc-url http://localhost:8545 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+```
+
+**Copy the contract addresses** from the output:
+- `ReputationRegistry: 0x...`
+- `PollFactory: 0x...`
+
+### Step 5: Update Frontend Config
+
+Edit `frontend/lib/contracts.ts` and paste your deployed addresses:
+
+```typescript
+export const REPUTATION_REGISTRY_ADDRESS = "0x..." as `0x${string}`;
+export const POLL_FACTORY_ADDRESS = "0x..." as `0x${string}`;
+```
+
+### Step 6: Start Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+Visit **http://localhost:3000**
+
+### Step 7: Connect Wallet
+
+1. Open MetaMask
+2. Add Network:
+   - **Network Name:** Anvil Local
+   - **RPC URL:** `http://localhost:8545`
+   - **Chain ID:** `31337`
+   - **Currency:** ETH
+3. Import Account:
+   - Private Key: `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+
+### 🎉 You're Ready!
+- Create polls
+- Cast votes with reputation-weighted quadratic voting
+- View live results
+- Share polls with auto-generated OG images
 
 ---
 
