@@ -1,25 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { toast } from "sonner";
+import { Sparkles, X } from "lucide-react";
 
 interface CreatePollModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void; // Changed to just trigger refetch
+  initialQuestion?: string;
+  initialOptions?: string[];
+  initialDuration?: number;
+  initialMaxWeightCap?: number;
 }
 
 export function CreatePollModal({
   isOpen,
   onClose,
   onSuccess,
+  initialQuestion = "",
+  initialOptions = ["", ""],
+  initialDuration = 7,
+  initialMaxWeightCap = 10,
 }: CreatePollModalProps) {
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-  const [duration, setDuration] = useState(7); // days
-  const [maxWeightCap, setMaxWeightCap] = useState(10);
+  const [question, setQuestion] = useState(initialQuestion);
+  const [options, setOptions] = useState(initialOptions);
+  const [duration, setDuration] = useState(initialDuration);
+  const [maxWeightCap, setMaxWeightCap] = useState(initialMaxWeightCap);
+
+  // IMPORTANT: only apply initial values ONCE when the modal opens.
+  // Otherwise parent re-renders (e.g. new array references) will overwrite the user's typing.
+  const didInitOnOpenRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen) {
+      didInitOnOpenRef.current = false;
+      return;
+    }
+    if (didInitOnOpenRef.current) return;
+
+    didInitOnOpenRef.current = true;
+    setQuestion(initialQuestion);
+    setOptions(initialOptions.length >= 2 ? initialOptions : ["", ""]);
+    setDuration(initialDuration);
+    setMaxWeightCap(initialMaxWeightCap);
+  }, [isOpen, initialQuestion, initialOptions, initialDuration, initialMaxWeightCap]);
 
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -105,24 +131,39 @@ export function CreatePollModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700/50 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="bg-gradient-to-br from-slate-950 to-slate-900 rounded-2xl border border-slate-700/50 max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl shadow-black/50">
+        <div className="p-6 border-b border-slate-800/60 bg-slate-950/40">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-white">Create New Poll</h2>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-emerald-400" />
+                Create New Poll
+              </h2>
+              <p className="text-sm text-slate-400 mt-1">
+                This will deploy a new on-chain poll via the PollFactory.
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors text-2xl"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              aria-label="Close"
             >
-              ×
+              <X className="w-5 h-5" />
             </button>
           </div>
+        </div>
 
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-84px)]">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Question */}
             <div>
-              <label className="block text-gray-300 mb-2 font-semibold">
+              <label className="block text-slate-200 mb-2 font-semibold">
                 Poll Question *
               </label>
               <input
@@ -130,17 +171,17 @@ export function CreatePollModal({
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="What should we prioritize next?"
-                className="w-full px-4 py-3 bg-slate-800/40 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-4 py-3 bg-slate-900/40 border border-slate-700/60 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:border-emerald-500/50 transition-colors"
                 maxLength={200}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 {question.length}/200
               </p>
             </div>
 
             {/* Options */}
             <div>
-              <label className="block text-gray-300 mb-2 font-semibold">
+              <label className="block text-slate-200 mb-2 font-semibold">
                 Options * (2-10)
               </label>
               <div className="space-y-3">
@@ -151,14 +192,14 @@ export function CreatePollModal({
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className="flex-1 px-4 py-3 bg-slate-800/40 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="flex-1 px-4 py-3 bg-slate-900/40 border border-slate-700/60 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:border-emerald-500/50 transition-colors"
                       maxLength={100}
                     />
                     {options.length > 2 && (
                       <button
                         type="button"
                         onClick={() => removeOption(index)}
-                        className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/30 transition-colors"
+                        className="px-4 py-2 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 hover:bg-red-500/25 transition-colors"
                       >
                         ×
                       </button>
@@ -170,7 +211,7 @@ export function CreatePollModal({
                 <button
                   type="button"
                   onClick={addOption}
-                  className="mt-3 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-colors text-sm"
+                  className="mt-3 px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-emerald-300 hover:bg-emerald-500/25 transition-colors text-sm font-semibold"
                 >
                   + Add Option
                 </button>
@@ -179,7 +220,7 @@ export function CreatePollModal({
 
             {/* Duration */}
             <div>
-              <label className="block text-gray-300 mb-2 font-semibold">
+              <label className="block text-slate-200 mb-2 font-semibold">
                 Duration: {duration} days
               </label>
               <input
@@ -188,12 +229,12 @@ export function CreatePollModal({
                 max="30"
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full h-2 bg-indigo-700/30 rounded-lg appearance-none cursor-pointer 
+                className="w-full h-2 bg-emerald-700/30 rounded-lg appearance-none cursor-pointer 
                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 
-                         [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-indigo-500 
+                         [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-emerald-500 
                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-slate-500 mt-1">
                 <span>1 day</span>
                 <span>30 days</span>
               </div>
@@ -201,7 +242,7 @@ export function CreatePollModal({
 
             {/* Weight Cap */}
             <div>
-              <label className="block text-gray-300 mb-2 font-semibold">
+              <label className="block text-slate-200 mb-2 font-semibold">
                 Max Vote Weight Cap: {maxWeightCap}x
               </label>
               <input
@@ -215,11 +256,11 @@ export function CreatePollModal({
                          [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-purple-500 
                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-slate-500 mt-1">
                 <span>2x (strict)</span>
                 <span>20x (lenient)</span>
               </div>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Prevents any single vote from having more than {maxWeightCap}x
                 the average weight
               </p>
@@ -231,7 +272,7 @@ export function CreatePollModal({
                 type="button"
                 onClick={onClose}
                 disabled={isPending || isConfirming}
-                className="flex-1 px-6 py-3 bg-slate-800/40 border border-slate-700/50 rounded-xl text-slate-300 hover:bg-slate-700/50 transition-colors font-semibold disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-slate-900/40 border border-slate-700/60 rounded-xl text-slate-200 hover:bg-slate-800/60 transition-colors font-semibold disabled:opacity-50"
               >
                 Cancel
               </button>

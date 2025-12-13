@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { CreatePollModal } from '@/components/CreatePollModal';
 import { ReputationLeaderboard } from '@/components/ReputationLeaderboard';
 import { VotingHistory } from '@/components/VotingHistory';
+import { WorkflowBuilder } from '@/components/WorkflowBuilder';
+import { NetworkHealth } from '@/components/NetworkHealth';
 import { useAccount, useReadContract } from 'wagmi';
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI } from '@/lib/contracts';
 import { 
@@ -14,12 +16,17 @@ import {
   Plus,
   Shield,
   BarChart3,
-  Clock
+  Clock,
+  FileText,
+  LayoutDashboard
 } from 'lucide-react';
+
+type GovernanceTab = 'overview' | 'workflow';
 
 export default function GovernancePage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [activeTab, setActiveTab] = useState<GovernanceTab>('overview');
   const { address, isConnected } = useAccount();
 
   const { data: userStats } = useReadContract({
@@ -66,7 +73,43 @@ export default function GovernancePage() {
 
       {/* Main Content */}
       <main className="px-6 sm:px-8 lg:px-12 py-8">
-        {/* Governance Stats */}
+        {/* Network Health */}
+        <div className="mb-6">
+          <NetworkHealth />
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-8 flex gap-2 bg-slate-800/30 backdrop-blur-lg rounded-lg p-2 border border-slate-700/50 w-fit">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all flex items-center gap-2 ${
+              activeTab === 'overview'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('workflow')}
+            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all flex items-center gap-2 ${
+              activeTab === 'workflow'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Workflow Builder
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'workflow' ? (
+          <WorkflowBuilder />
+        ) : (
+          <>
+            {/* Governance Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
             <div className="flex items-center justify-between mb-3">
@@ -220,6 +263,8 @@ export default function GovernancePage() {
             </div>
           </div>
         </div>
+          </>
+        )}
       </main>
 
       {/* Create Poll Modal */}
