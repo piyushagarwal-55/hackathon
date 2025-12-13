@@ -106,7 +106,7 @@ export function CreatePollModal({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-900 to-purple-900 rounded-2xl border border-white/10 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700/50 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -130,7 +130,7 @@ export function CreatePollModal({
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="What should we prioritize next?"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-slate-800/40 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 maxLength={200}
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -151,7 +151,7 @@ export function CreatePollModal({
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-4 py-3 bg-slate-800/40 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       maxLength={100}
                     />
                     {options.length > 2 && (
@@ -170,7 +170,7 @@ export function CreatePollModal({
                 <button
                   type="button"
                   onClick={addOption}
-                  className="mt-3 px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-400 hover:bg-indigo-500/30 transition-colors text-sm"
+                  className="mt-3 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-400 hover:bg-emerald-500/30 transition-colors text-sm"
                 >
                   + Add Option
                 </button>
@@ -231,14 +231,14 @@ export function CreatePollModal({
                 type="button"
                 onClick={onClose}
                 disabled={isPending || isConfirming}
-                className="flex-1 px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 hover:bg-white/10 transition-colors font-semibold disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-slate-800/40 border border-slate-700/50 rounded-xl text-slate-300 hover:bg-slate-700/50 transition-colors font-semibold disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isPending || isConfirming || isSuccess}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl text-white hover:shadow-lg hover:shadow-indigo-500/50 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white hover:shadow-lg hover:shadow-emerald-500/50 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPending
                   ? "Confirm in Wallet..."

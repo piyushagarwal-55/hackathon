@@ -3,6 +3,7 @@
 import { useReadContract, useAccount } from 'wagmi';
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI } from '@/lib/contracts';
 import { getReputationLevel, formatNumber } from '@/lib/calculations';
+import { Trophy } from 'lucide-react';
 
 export function ReputationLeaderboard() {
   const { address } = useAccount();
@@ -21,9 +22,9 @@ export function ReputationLeaderboard() {
 
   if (!userStats) {
     return (
-      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
+      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
         <h3 className="text-2xl font-bold text-white mb-4">🏆 Reputation Leaderboard</h3>
-        <p className="text-gray-400 text-center py-8">
+        <p className="text-slate-400 text-center py-8">
           Connect wallet to see your ranking
         </p>
       </div>
@@ -56,12 +57,12 @@ export function ReputationLeaderboard() {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-amber-900/20 to-yellow-900/20 backdrop-blur-lg rounded-2xl p-8 border border-amber-500/20">
+    <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
       <div className="flex items-center gap-3 mb-6">
-        <div className="text-4xl">🏆</div>
+        <Trophy className="w-8 h-8 text-amber-400" />
         <div>
           <h3 className="text-2xl font-bold text-white">Reputation Leaderboard</h3>
-          <p className="text-gray-400 text-sm">Top contributors in this community</p>
+          <p className="text-slate-400 text-sm">Top contributors in this community</p>
         </div>
       </div>
 
@@ -75,8 +76,8 @@ export function ReputationLeaderboard() {
               key={user.address}
               className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
                 user.isCurrentUser
-                  ? 'bg-indigo-500/20 border border-indigo-500/30 shadow-lg'
-                  : 'bg-white/5 border border-white/10'
+                  ? 'bg-emerald-500/15 border border-emerald-500/40 shadow-lg shadow-emerald-500/10'
+                  : 'bg-slate-800/30 border border-slate-700/50 hover:border-slate-600/50'
               }`}
             >
               {/* Rank */}
@@ -86,7 +87,7 @@ export function ReputationLeaderboard() {
                     {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
                   </span>
                 ) : (
-                  <span className="text-xl font-bold text-gray-500">#{index + 1}</span>
+                  <span className="text-lg font-bold text-slate-500">#{index + 1}</span>
                 )}
               </div>
 
@@ -97,7 +98,7 @@ export function ReputationLeaderboard() {
                     {user.address.slice(0, 6)}...{user.address.slice(-4)}
                   </p>
                   {user.isCurrentUser && (
-                    <span className="px-2 py-0.5 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-xs text-indigo-400">
+                    <span className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/40 rounded-full text-xs text-emerald-400 font-semibold">
                       You
                     </span>
                   )}
@@ -110,7 +111,7 @@ export function ReputationLeaderboard() {
                 <p className="text-lg font-bold text-white">
                   {formatNumber(user.reputation)}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-slate-400">
                   {(user.multiplier / 1e18).toFixed(1)}x multiplier
                 </p>
               </div>
@@ -121,17 +122,17 @@ export function ReputationLeaderboard() {
 
       {/* Your Stats */}
       {address && (
-        <div className="mt-6 pt-6 border-t border-white/10">
-          <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-4">
+        <div className="mt-6 pt-6 border-t border-slate-700/50">
+          <div className="bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Your Global Rank</p>
+                <p className="text-sm text-slate-400 mb-1">Your Global Rank</p>
                 <p className="text-2xl font-bold text-white">
                   #{leaderboardData.findIndex(u => u.isCurrentUser) + 1}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-400 mb-1">Keep voting to climb!</p>
+                <p className="text-sm text-slate-400 mb-1">Keep voting to climb!</p>
                 <p className={`text-lg font-bold ${color}`}>{level}</p>
               </div>
             </div>

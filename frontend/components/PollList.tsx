@@ -51,7 +51,7 @@ export function PollList({ onSelectPoll, refreshTrigger }: PollListProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 text-center">
+      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
         <div className="text-6xl mb-4">⏳</div>
         <h3 className="text-xl font-bold text-white mb-2">Loading Polls...</h3>
       </div>
@@ -60,20 +60,20 @@ export function PollList({ onSelectPoll, refreshTrigger }: PollListProps) {
 
   if (isError) {
     return (
-      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 text-center">
+      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
         <div className="text-6xl mb-4">❌</div>
         <h3 className="text-xl font-bold text-white mb-2">Error Loading Polls</h3>
-        <p className="text-gray-400 text-sm">{error?.message || "Unknown error"}</p>
+        <p className="text-slate-400 text-sm">{error?.message || "Unknown error"}</p>
       </div>
     );
   }
 
   if (!recentPolls || recentPolls.length === 0) {
     return (
-      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 text-center">
+      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
         <div className="text-6xl mb-4">📋</div>
         <h3 className="text-xl font-bold text-white mb-2">No Polls Yet</h3>
-        <p className="text-gray-400">Create the first poll to get started!</p>
+        <p className="text-slate-400">Create the first poll to get started!</p>
       </div>
     );
   }
@@ -146,49 +146,49 @@ function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
   return (
     <div
       onClick={() => onSelect(options as string[])}
-      className={`bg-white/5 backdrop-blur-lg rounded-xl p-6 border transition-all cursor-pointer ${
+      className={`bg-gradient-to-br backdrop-blur-lg rounded-xl p-6 border transition-all cursor-pointer ${
         isSelected
-          ? "border-indigo-500 shadow-lg shadow-indigo-500/30 scale-[1.02]"
-          : "border-white/10 hover:border-white/20 hover:bg-white/10"
+          ? "from-emerald-500/20 to-teal-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-[1.02]"
+          : "from-slate-800/40 to-slate-700/20 border-slate-700/50 hover:border-slate-600/50 hover:bg-slate-700/30"
       }`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-mono text-gray-500">
+            <span className="text-sm font-mono text-slate-500">
               #{index + 1}
             </span>
             {isEnded ? (
-              <span className="px-2 py-0.5 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-400">
+              <span className="px-2 py-0.5 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-400 font-semibold">
                 Ended
               </span>
             ) : (
-              <span className="px-2 py-0.5 bg-green-500/20 border border-green-500/30 rounded-full text-xs text-green-400">
+              <span className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs text-emerald-400 font-semibold">
                 Active
               </span>
             )}
           </div>
           <h4 className="text-lg font-bold text-white mb-2">{question}</h4>
-          <p className="text-sm text-gray-400">{options.length} options</p>
+          <p className="text-sm text-slate-400">{options.length} options</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-4">
           <div>
-            <span className="text-gray-500">Voters: </span>
-            <span className="text-indigo-400 font-semibold">
+            <span className="text-slate-500">Voters: </span>
+            <span className="text-emerald-400 font-semibold">
               {totalVoters?.toString() || "0"}
             </span>
           </div>
           <div>
-            <span className="text-gray-500">Ends: </span>
-            <span className={isEnded ? "text-red-400" : "text-green-400"}>
+            <span className="text-slate-500">Ends: </span>
+            <span className={isEnded ? "text-red-400" : "text-emerald-400"}>
               {timeRemaining}
             </span>
           </div>
         </div>
-        <button className="text-indigo-400 hover:text-indigo-300 transition-colors font-semibold">
+        <button className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">
           {isSelected ? "Selected ✓" : "View →"}
         </button>
       </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { Sidebar } from "@/components/Sidebar";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -28,11 +29,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen text-white`}
       >
         <Providers>
-          {children}
-          <Toaster position="top-right" theme="dark" />
+          <div className="flex">
+            <Sidebar />
+            <main className="flex-1 ml-64">
+              {children}
+              <Toaster position="top-right" theme="dark" />
+            </main>
+          </div>
         </Providers>
       </body>
     </html>
