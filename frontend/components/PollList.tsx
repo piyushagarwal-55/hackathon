@@ -85,23 +85,20 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-2xl font-bold text-white mb-4">Recent Polls</h3>
-      <div className="grid gap-4">
-        {recentPolls.map((pollAddress, index) => (
-          <PollCard
-            key={`${pollAddress}-${index}`}
-            pollAddress={pollAddress}
-            index={index}
-            isSelected={selectedPollIndex === index}
-            onSelect={(options) => {
-              setSelectedPollIndex(index);
-              onSelectPoll(pollAddress, options);
-            }}
-            onShare={onShare}
-          />
-        ))}
-      </div>
+    <div className="space-y-3">
+      {recentPolls.map((pollAddress, index) => (
+        <PollCard
+          key={`${pollAddress}-${index}`}
+          pollAddress={pollAddress}
+          index={index}
+          isSelected={selectedPollIndex === index}
+          onSelect={(options) => {
+            setSelectedPollIndex(index);
+            onSelectPoll(pollAddress, options);
+          }}
+          onShare={onShare}
+        />
+      ))}
     </div>
   );
 }
@@ -161,61 +158,82 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare }: PollCar
   return (
     <div
       onClick={() => onSelect(options as string[])}
-      className={`bg-gradient-to-br backdrop-blur-lg rounded-xl p-6 border transition-all cursor-pointer ${
+      className={`group relative bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border transition-all cursor-pointer overflow-hidden ${
         isSelected
-          ? "from-emerald-500/20 to-teal-500/10 border-emerald-500/50 shadow-lg shadow-emerald-500/20 scale-[1.02]"
-          : "from-slate-800/40 to-slate-700/20 border-slate-700/50 hover:border-slate-600/50 hover:bg-slate-700/30"
+          ? "border-emerald-500/60 shadow-lg shadow-emerald-500/10"
+          : "border-slate-700/50 hover:border-slate-600/60 hover:bg-slate-900/80"
       }`}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
+      {/* Selection Indicator */}
+      {isSelected && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 to-teal-500" />
+      )}
+
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          {/* Status Badge */}
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-mono text-slate-500">
-              #{index + 1}
-            </span>
             {isEnded ? (
-              <span className="px-2 py-0.5 bg-red-500/20 border border-red-500/30 rounded-full text-xs text-red-400 font-semibold">
-                Ended
+              <span className="px-2 py-0.5 bg-slate-700/50 border border-slate-600/50 rounded text-xs text-slate-400 font-medium">
+                Closed
               </span>
             ) : (
-              <span className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs text-emerald-400 font-semibold">
-                Active
+              <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded text-xs text-emerald-400 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
               </span>
             )}
+            <span className="text-xs text-slate-500">#{index + 1}</span>
           </div>
-          <h4 className="text-lg font-bold text-white mb-2">{question}</h4>
-          <p className="text-sm text-slate-400">{options.length} options</p>
-        </div>
-      </div>
 
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="text-slate-500">Voters: </span>
-            <span className="text-emerald-400 font-semibold">
-              {totalVoters?.toString() || "0"}
-            </span>
-          </div>
-          <div>
-            <span className="text-slate-500">Ends: </span>
-            <span className={isEnded ? "text-red-400" : "text-emerald-400"}>
-              {timeRemaining}
-            </span>
+          {/* Question */}
+          <h4 className="text-base font-semibold text-white mb-3 line-clamp-2 group-hover:text-emerald-400 transition-colors">
+            {question}
+          </h4>
+
+          {/* Stats Row */}
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-slate-800/50 flex items-center justify-center">
+                <span className="text-[10px]">👥</span>
+              </div>
+              <span className="text-slate-400">{totalVoters?.toString() || "0"}</span>
+              <span className="text-slate-600">voters</span>
+            </div>
+            <div className="w-px h-3 bg-slate-700/50" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-slate-800/50 flex items-center justify-center">
+                <span className="text-[10px]">⏱️</span>
+              </div>
+              <span className={isEnded ? "text-slate-500" : "text-emerald-400"}>
+                {timeRemaining}
+              </span>
+            </div>
+            <div className="w-px h-3 bg-slate-700/50" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-600">{options.length} options</span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Actions */}
+        <div className="flex items-center gap-1">
           {onShare && (
             <button
               onClick={handleShare}
-              className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg"
-              title="Share poll"
+              className="p-2 text-slate-500 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
+              title="Share"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5" />
             </button>
           )}
-          <button className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">
-            {isSelected ? "Selected ✓" : "View →"}
-          </button>
+          <div className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+            isSelected
+              ? "bg-emerald-500/20 text-emerald-400"
+              : "text-slate-400 group-hover:text-white group-hover:bg-slate-800/50"
+          }`}>
+            {isSelected ? "Active" : "View"}
+          </div>
         </div>
       </div>
     </div>

@@ -195,18 +195,18 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
 
   if (hasVoted) {
     return (
-      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
+      <div className="sticky top-24 bg-slate-900/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
         <div className="text-center">
-          <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+          <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto mb-3">
+            <CheckCircle2 className="w-6 h-6 text-emerald-400" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">Vote Cast!</h3>
-          <p className="text-slate-400 mb-2">
-            You voted for: <span className="text-emerald-400 font-semibold">{options[Number(existingVote[0])]}</span>
+          <h3 className="text-lg font-bold text-white mb-2">Vote Recorded</h3>
+          <p className="text-slate-400 text-sm mb-4">
+            Your choice: <span className="text-emerald-400 font-semibold">{options[Number(existingVote[0])]}</span>
           </p>
-          <div className="bg-slate-800/40 rounded-lg p-4 mt-4 border border-slate-700/50">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/40">
             <p className="text-slate-500 text-xs mb-1">Vote Weight</p>
-            <p className="text-3xl font-bold text-emerald-400">{Number(existingVote[2]).toFixed(2)}</p>
+            <p className="text-2xl font-bold text-emerald-400">{Number(existingVote[2]).toFixed(2)}</p>
           </div>
         </div>
       </div>
@@ -214,81 +214,28 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
-      <h2 className="text-2xl font-bold text-white mb-6">Cast Your Vote</h2>
+    <div className="sticky top-24 bg-slate-900/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+      <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        🗳️ Place Your Bet
+      </h2>
 
-      {/* Credits Slider */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-slate-300 text-sm font-medium">Credits to Spend</label>
-          <span className="text-2xl font-bold text-emerald-400">{creditsSpent}</span>
-        </div>
-        <input
-          type="range"
-          min="1"
-          max="100"
-          value={creditsSpent}
-          onChange={(e) => setCreditsSpent(Number(e.target.value))}
-          className="w-full h-2 bg-slate-700/40 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-        />
-        <div className="flex justify-between text-xs text-slate-500 mt-2">
-          <span>1</span>
-          <span>100</span>
-        </div>
-      </div>
-
-      {/* Math Visualizer - Key Component */}
-      <div className="bg-black/40 border border-slate-700/50 rounded-lg p-6 mb-8">
-        <p className="text-slate-400 text-xs uppercase tracking-widest mb-4">Math Equation</p>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2 font-mono">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500">√</span>
-              <span className="text-white font-bold">{creditsSpent}</span>
-            </div>
-            <span className="text-slate-600">×</span>
-            <div className="flex items-center gap-2">
-              <span className="text-amber-400 font-bold">{multiplierValue.toFixed(1)}x</span>
-            </div>
-            <span className="text-slate-600">=</span>
-            <div className="flex items-center gap-2">
-              <span className="text-emerald-400 font-bold text-lg">{weightedVotes.toFixed(2)}</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div className="bg-slate-700/30 rounded p-2 border border-slate-600/50">
-              <p className="text-slate-500">Credits</p>
-              <p className="text-white font-semibold">{sqrtCredits.toFixed(2)}</p>
-            </div>
-            <div className="bg-amber-950/30 rounded p-2 border border-amber-600/50">
-              <p className="text-amber-300">Multiplier</p>
-              <p className="text-amber-400 font-semibold">{multiplierValue.toFixed(2)}x</p>
-            </div>
-            <div className="bg-emerald-950/30 rounded p-2 border border-emerald-600/50">
-              <p className="text-emerald-300">Result</p>
-              <p className="text-emerald-400 font-semibold">{weightedVotes.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Option Selection - Large Cards */}
-      <div className="space-y-3 mb-6">
-        <p className="text-slate-300 text-sm font-medium">Select an option:</p>
+      {/* Option Selection */}
+      <div className="space-y-2 mb-5">
+        <p className="text-slate-400 text-xs font-medium mb-2">Choose outcome</p>
         {options.map((option, idx) => (
           <button
             key={idx}
             onClick={() => setSelectedOption(idx)}
-            className={`w-full p-4 rounded-lg font-semibold transition-all duration-200 ${
+            className={`w-full p-3 rounded-lg font-medium text-sm transition-all ${
               selectedOption === idx
-                ? 'bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border border-emerald-500/60 text-emerald-300 shadow-lg shadow-emerald-500/20'
-                : 'bg-slate-800/40 text-slate-300 hover:bg-slate-800/60 border border-slate-700/50 hover:border-slate-600/50'
+                ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-300'
+                : 'bg-slate-800/40 text-slate-300 hover:bg-slate-800/60 border border-slate-700/40 hover:border-slate-600/50'
             }`}
           >
             <div className="flex items-center justify-between">
               <span>{option}</span>
               {selectedOption === idx && (
-                <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
                   <span className="text-xs text-white">✓</span>
                 </div>
               )}
@@ -297,25 +244,62 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
         ))}
       </div>
 
+      {/* Credits Slider */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-slate-400 text-xs font-medium">Vote Credits</label>
+          <span className="text-lg font-bold text-white">{creditsSpent}</span>
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="100"
+          value={creditsSpent}
+          onChange={(e) => setCreditsSpent(Number(e.target.value))}
+          className="w-full h-2 bg-slate-700/40 rounded-lg appearance-none cursor-pointer 
+                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 
+                   [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-500 
+                   [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer"
+        />
+        <div className="flex justify-between text-xs text-slate-600 mt-1">
+          <span>Min</span>
+          <span>Max</span>
+        </div>
+      </div>
+
+      {/* Weight Preview */}
+      <div className="bg-slate-800/50 border border-slate-700/40 rounded-lg p-4 mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-slate-400 text-xs">Your Vote Weight</span>
+          <span className="text-amber-400 text-xs font-medium">{multiplierValue.toFixed(1)}x rep</span>
+        </div>
+        <div className="text-2xl font-bold text-emerald-400">
+          {weightedVotes.toFixed(2)}
+        </div>
+        <div className="mt-2 text-xs text-slate-500 font-mono">
+          √{creditsSpent} × {multiplierValue.toFixed(1)} = {weightedVotes.toFixed(2)}
+        </div>
+      </div>
+
       {/* Vote Button */}
       <button
         onClick={handleVote}
         disabled={selectedOption === null || isPending || isConfirming || !isConnected}
-        className={`w-full py-3 rounded-lg font-bold text-base transition-all duration-200 ${
+        className={`w-full py-3 rounded-lg font-semibold text-sm transition-all ${
           selectedOption === null || !isConnected
             ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/30'
+            : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/20'
         }`}
       >
         {!isConnected
-          ? 'Connect Wallet to Vote'
+          ? 'Connect Wallet'
           : isPending
-          ? 'Confirming in Wallet...'
+          ? '🔐 Confirm...'
           : isConfirming
-          ? 'Voting...'
+          ? '⏳ Voting...'
           : isSuccess
-          ? 'Vote Cast! ✓'
-          : `Cast Vote (${weightedVotes.toFixed(2)} weight)`}
+          ? '✅ Done'
+          : 'Submit Vote'}
       </button>
 
       {isSuccess && (

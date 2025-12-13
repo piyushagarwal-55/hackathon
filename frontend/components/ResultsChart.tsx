@@ -142,18 +142,20 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-white">Live Results</h2>
+    <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          📊 Live Results
+        </h2>
         <div className="text-right">
-          <p className="text-slate-400 text-xs">Total Voters</p>
-          <p className="text-2xl font-bold text-emerald-400">
+          <p className="text-slate-500 text-xs">Voters</p>
+          <p className="text-lg font-bold text-emerald-400">
             {totalVoters?.toString() || "0"}
           </p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {results.map((votes, idx) => {
           const voteCount = Number(votes);
           const percentage =
@@ -162,38 +164,38 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
 
           return (
             <div key={idx} className="group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-white font-semibold">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-white font-medium text-sm truncate">
                     {options[idx]}
                   </span>
                   {isWinning && (
-                    <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full text-xs font-semibold text-emerald-400 flex items-center gap-1">
-                      🏆 Leading
+                    <span className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/40 rounded text-xs font-medium text-emerald-400 flex items-center gap-1 flex-shrink-0">
+                      🏆
                     </span>
                   )}
                 </div>
-                <div className="text-right">
-                  <p className="text-white font-mono font-bold">
+                <div className="text-right flex-shrink-0">
+                  <p className="text-white font-bold text-sm">
                     {percentage.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {formatNumber(voteCount)} votes
                   </p>
                 </div>
               </div>
 
-              {/* Thick Progress Bar */}
-              <div className="relative h-4 bg-slate-700/40 rounded-full overflow-hidden border border-slate-700/50">
+              {/* Progress Bar */}
+              <div className="relative h-2 bg-slate-800/50 rounded-full overflow-hidden">
                 <div
-                  className={`absolute top-0 left-0 h-full transition-all duration-500 rounded-full ${
+                  className={`absolute top-0 left-0 h-full transition-all duration-500 ${
                     isWinning
-                      ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600"
-                      : "bg-gradient-to-r from-slate-600 to-slate-500"
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500"
+                      : "bg-slate-600"
                   }`}
                   style={{ width: `${percentage}%` }}
                 />
               </div>
+              <p className="text-xs text-slate-500 mt-1">
+                {formatNumber(voteCount)} votes
+              </p>
             </div>
           );
         })}
@@ -201,22 +203,19 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
 
       {/* Winner Summary */}
       {totalVotes > 0 && (
-        <div className="mt-8 pt-8 border-t border-slate-700/50">
-          <div className="bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/30 rounded-xl p-6">
-            <div className="flex items-start justify-between">
+        <div className="mt-5 pt-5 border-t border-slate-700/40">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-400 text-xs uppercase tracking-widest font-semibold mb-2">
-                  Current Leader
+                <p className="text-emerald-400 text-xs font-medium mb-1">
+                  Leading
                 </p>
-                <p className="text-2xl font-bold text-white mb-1">
+                <p className="text-lg font-bold text-white">
                   {options[results.indexOf(BigInt(maxVotes))]}
-                </p>
-                <p className="text-slate-400 text-sm">
-                  {formatNumber(maxVotes)} weighted votes
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-emerald-400 text-3xl font-bold">
+                <p className="text-emerald-400 text-2xl font-bold">
                   {totalVotes > 0
                     ? (
                         (Number(results[results.indexOf(BigInt(maxVotes))]) /
@@ -226,32 +225,19 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
                     : 0}
                   %
                 </p>
+                <p className="text-slate-500 text-xs">
+                  {formatNumber(maxVotes)} votes
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Sybil Activity Feed */}
-      <div className="mt-8 pt-8 border-t border-slate-700/50">
-        <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-3">
-          Sybil Activity
-        </p>
-        <div className="bg-red-950/20 border border-red-500/30 rounded-lg p-3 font-mono text-xs">
-          <p className="text-red-400">
-            <span className="text-red-500">⚠</span> Blocked 3 Sybil votes just
-            now
-          </p>
-          <p className="text-red-400 mt-2">
-            <span className="text-red-500">✓</span> Network integrity: 99.8%
-          </p>
-        </div>
-      </div>
-
       {/* Live indicator */}
       <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
-        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-        <span>Live updates</span>
+        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+        <span>Real-time</span>
       </div>
     </div>
   );
