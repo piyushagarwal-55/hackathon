@@ -12,6 +12,8 @@ import { useReadContract } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { useState } from "react";
 import { ArrowRight, Shield, Calculator, Gavel } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import { NetworkHealth } from "@/components/NetworkHealth";
 
 // Demo poll address - Create your first poll using the "Create Poll" button!
 // Once created, you can paste the address here or select from PollList
@@ -48,74 +50,66 @@ export default function Home() {
 
   const demoOptions = ["Security Audit", "Mobile App Development", "UX Polish"];
 
+  const { data: pollCount } = useReadContract({
+    address: POLL_FACTORY_ADDRESS,
+    abi: POLL_FACTORY_ABI,
+    functionName: "getPollCount",
+    query: { refetchInterval: 15000 },
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header - Minimal top bar */}
-      <header className="border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-lg sticky top-0 z-40">
-        <div className="px-6 sm:px-8 lg:px-12 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Dashboard</h2>
-              <p className="text-xs text-slate-400">Welcome back to RepVote</p>
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-semibold text-sm transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2"
-            >
-              <span>+</span>
-              Create Poll
-            </button>
+    <div className="min-h-screen">
+      <PageHeader
+        title="Dashboard"
+        subtitle="Reputation-weighted governance & live polls"
+        actions={
+          <button onClick={() => setIsCreateModalOpen(true)} className="rv-btn-primary">
+            <span className="text-lg leading-none">+</span>
+            Create Poll
+          </button>
+        }
+      >
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          <div className="max-w-3xl text-sm text-slate-400">
+            Quadratic voting + reputation multiplier gives Sybil resistance without whale dominance.
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="rv-chip">
+              <span className="text-slate-400">Total polls</span>
+              <span className="text-white">{pollCount?.toString() ?? "—"}</span>
+            </span>
+            <span className="rv-chip">
+              <span className="text-slate-400">Network</span>
+              <span className="text-emerald-300">Testnet</span>
+            </span>
           </div>
         </div>
-      </header>
+      </PageHeader>
 
       {/* Main Content */}
-      <main className="px-6 sm:px-8 lg:px-12 py-8">
-        {/* Hero Section */}
-        <div className="mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-            Fair Governance Through Reputation
-          </h1>
-          <p className="text-lg text-slate-300 max-w-3xl">
-            RepVote combines reputation weighting with quadratic voting to
-            create Sybil-resistant, fair decision-making.
-          </p>
-        </div>
+      <main className="rv-container py-8 space-y-10">
+        <NetworkHealth />
 
         {/* User Reputation Card */}
-        <div className="mb-12">
-          <RepDisplay />
-        </div>
+        <RepDisplay />
 
         {/* Tabs Navigation */}
-        <div className="mb-8 flex gap-2 bg-slate-800/30 backdrop-blur-lg rounded-lg p-2 border border-slate-700/50 w-fit">
+        <div className="rv-tabs w-fit">
           <button
             onClick={() => setActiveTab("vote")}
-            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all ${
-              activeTab === "vote"
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                : "text-slate-300 hover:text-white"
-            }`}
+            className={`rv-tab ${activeTab === "vote" ? "rv-tab-active" : ""}`}
           >
             🗳️ Vote
           </button>
           <button
             onClick={() => setActiveTab("leaderboard")}
-            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all ${
-              activeTab === "leaderboard"
-                ? "bg-amber-600 text-white shadow-lg shadow-amber-500/30"
-                : "text-slate-300 hover:text-white"
-            }`}
+            className={`rv-tab ${activeTab === "leaderboard" ? "rv-tab-active" : ""}`}
           >
             🏆 Leaderboard
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all ${
-              activeTab === "history"
-                ? "bg-teal-600 text-white shadow-lg shadow-teal-500/30"
-                : "text-slate-300 hover:text-white"
-            }`}
+            className={`rv-tab ${activeTab === "history" ? "rv-tab-active" : ""}`}
           >
             📜 History
           </button>
@@ -149,21 +143,14 @@ export default function Home() {
                 />
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/40 backdrop-blur-lg rounded-2xl p-12 border border-slate-700/50 text-center">
-                <div className="text-6xl mb-4">🚀</div>
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  Deploy Contracts to Get Started
+              <div className="rv-card p-10 text-center">
+                <div className="text-5xl mb-3">🧭</div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  Select a poll to vote
                 </h3>
-                <p className="text-slate-400 mb-6 max-w-2xl mx-auto">
-                  Follow the deployment instructions in the
-                  contracts/DEPLOYMENT.md file to deploy RepVote to Sepolia
-                  testnet.
+                <p className="text-slate-400 max-w-2xl mx-auto">
+                  Pick a poll from the list above to see the voting card and live results.
                 </p>
-                <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-4 max-w-xl mx-auto">
-                  <p className="text-sm text-slate-300 font-mono">
-                    cd contracts && forge script script/Deploy.s.sol --broadcast
-                  </p>
-                </div>
               </div>
             )}
           </>
@@ -249,7 +236,7 @@ export default function Home() {
         </div>
 
         {/* Formula Display */}
-        <div className="bg-gradient-to-r from-slate-800/50 to-slate-800/30 border border-slate-700/50 rounded-xl p-8 text-center mb-12">
+        <div className="rv-card-soft p-8 text-center">
           <p className="text-slate-400 text-sm mb-3 uppercase tracking-wide">
             Vote Weight Calculation
           </p>
@@ -263,8 +250,8 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/50 bg-slate-950/50 backdrop-blur-lg mt-16">
-        <div className="px-6 sm:px-8 lg:px-12 py-8">
+      <footer className="border-t border-slate-800/50 bg-slate-950/40 backdrop-blur-xl mt-16">
+        <div className="rv-container py-10">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               <div>
@@ -276,9 +263,9 @@ export default function Home() {
               <div>
                 <h4 className="text-white font-semibold mb-3">Resources</h4>
                 <ul className="space-y-2 text-sm text-slate-400">
-                  <li><a href="#" className="hover:text-emerald-400 transition">Documentation</a></li>
-                  <li><a href="#" className="hover:text-emerald-400 transition">GitHub</a></li>
-                  <li><a href="#" className="hover:text-emerald-400 transition">Discord</a></li>
+                  <li><a href="/docs" className="hover:text-emerald-300 transition-colors">Documentation</a></li>
+                  <li><a href="#" className="hover:text-emerald-300 transition-colors">GitHub</a></li>
+                  <li><a href="#" className="hover:text-emerald-300 transition-colors">Discord</a></li>
                 </ul>
               </div>
               <div>

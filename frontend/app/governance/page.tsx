@@ -6,6 +6,7 @@ import { ReputationLeaderboard } from '@/components/ReputationLeaderboard';
 import { VotingHistory } from '@/components/VotingHistory';
 import { WorkflowBuilder } from '@/components/WorkflowBuilder';
 import { NetworkHealth } from '@/components/NetworkHealth';
+import { PageHeader } from '@/components/PageHeader';
 import { useAccount, useReadContract } from 'wagmi';
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI } from '@/lib/contracts';
 import { 
@@ -49,55 +50,36 @@ export default function GovernancePage() {
   const multiplier = userStats ? Number(userStats[1]) / 1e18 : 0.3;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <header className="border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-lg sticky top-0 z-40">
-        <div className="px-6 sm:px-8 lg:px-12 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Governance</h1>
-              <p className="text-slate-400">
-                Participate in RepVote governance and manage proposals
-              </p>
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-semibold transition-all shadow-lg shadow-emerald-500/30 flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              Create Proposal
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <PageHeader
+        title="Governance"
+        subtitle="Create proposals, track reputation, and coordinate decisions"
+        icon={<Users className="w-5 h-5 text-emerald-300" />}
+        actions={
+          <button onClick={() => setIsCreateModalOpen(true)} className="rv-btn-primary">
+            <Plus className="w-5 h-5" />
+            Create Proposal
+          </button>
+        }
+      />
 
       {/* Main Content */}
-      <main className="px-6 sm:px-8 lg:px-12 py-8">
+      <main className="rv-container py-8 space-y-8">
         {/* Network Health */}
-        <div className="mb-6">
-          <NetworkHealth />
-        </div>
+        <NetworkHealth />
 
         {/* Tabs */}
-        <div className="mb-8 flex gap-2 bg-slate-800/30 backdrop-blur-lg rounded-lg p-2 border border-slate-700/50 w-fit">
+        <div className="rv-tabs w-fit">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all flex items-center gap-2 ${
-              activeTab === 'overview'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
+            className={`rv-tab flex items-center gap-2 ${activeTab === 'overview' ? 'rv-tab-active' : ''}`}
           >
             <LayoutDashboard className="w-4 h-4" />
             Overview
           </button>
           <button
             onClick={() => setActiveTab('workflow')}
-            className={`px-6 py-2 rounded-md font-semibold text-sm transition-all flex items-center gap-2 ${
-              activeTab === 'workflow'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
+            className={`rv-tab flex items-center gap-2 ${activeTab === 'workflow' ? 'rv-tab-active' : ''}`}
           >
             <FileText className="w-4 h-4" />
             Workflow Builder
@@ -109,9 +91,9 @@ export default function GovernancePage() {
           <WorkflowBuilder />
         ) : (
           <>
-            {/* Governance Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            {/* Governance Stats (UI-only placeholders) */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="rv-card-soft rounded-xl p-6">
             <div className="flex items-center justify-between mb-3">
               <Gavel className="w-5 h-5 text-emerald-400" />
               <span className="text-xs px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-emerald-400">
@@ -122,7 +104,7 @@ export default function GovernancePage() {
             <p className="text-xs text-slate-400">Total Proposals</p>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-lg rounded-xl p-6 border border-emerald-500/30">
+          <div className="rv-card-soft rounded-xl p-6 border-emerald-500/30">
             <div className="flex items-center justify-between mb-3">
               <Clock className="w-5 h-5 text-emerald-400" />
               <span className="text-xs px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-emerald-400">
@@ -133,7 +115,7 @@ export default function GovernancePage() {
             <p className="text-xs text-slate-400">Active Proposals</p>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+          <div className="rv-card-soft rounded-xl p-6">
             <div className="flex items-center justify-between mb-3">
               <Users className="w-5 h-5 text-amber-400" />
               <span className="text-xs px-2 py-1 bg-amber-500/20 border border-amber-500/30 rounded-full text-amber-400">
@@ -144,7 +126,7 @@ export default function GovernancePage() {
             <p className="text-xs text-slate-400">Active Voters</p>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+          <div className="rv-card-soft rounded-xl p-6">
             <div className="flex items-center justify-between mb-3">
               <BarChart3 className="w-5 h-5 text-teal-400" />
               <span className="text-xs px-2 py-1 bg-teal-500/20 border border-teal-500/30 rounded-full text-teal-400">
@@ -158,7 +140,7 @@ export default function GovernancePage() {
 
         {/* Your Governance Power */}
         {isConnected && (
-          <div className="mb-8 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-lg rounded-2xl p-8 border border-emerald-500/30">
+          <div className="rv-card p-8 border-emerald-500/30">
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Your Governance Power</h2>
@@ -168,7 +150,7 @@ export default function GovernancePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-slate-800/40 rounded-lg p-6 border border-slate-700/50">
+              <div className="rv-card-soft rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Award className="w-5 h-5 text-emerald-400" />
                   <p className="text-slate-400 text-sm">Reputation Score</p>
@@ -177,7 +159,7 @@ export default function GovernancePage() {
                 <p className="text-xs text-slate-500 mt-2">Earned through participation</p>
               </div>
 
-              <div className="bg-slate-800/40 rounded-lg p-6 border border-slate-700/50">
+              <div className="rv-card-soft rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-amber-400" />
                   <p className="text-slate-400 text-sm">Vote Multiplier</p>
@@ -186,7 +168,7 @@ export default function GovernancePage() {
                 <p className="text-xs text-slate-500 mt-2">Based on your reputation</p>
               </div>
 
-              <div className="bg-slate-800/40 rounded-lg p-6 border border-slate-700/50">
+              <div className="rv-card-soft rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-2">
                   <Gavel className="w-5 h-5 text-teal-400" />
                   <p className="text-slate-400 text-sm">Proposals Created</p>
@@ -212,7 +194,7 @@ export default function GovernancePage() {
         </div>
 
         {/* Governance Guidelines */}
-        <div className="mt-8 bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
+        <div className="rv-card p-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
             <Shield className="w-6 h-6 text-emerald-400" />
             Governance Guidelines

@@ -1,49 +1,42 @@
 'use client';
 
 import { BookOpen, Shield, TrendingUp, Users, Code, Zap, Lock, Award } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Header */}
-      <header className="border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-lg sticky top-0 z-40">
-        <div className="px-6 sm:px-8 lg:px-12 py-6">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-emerald-400" />
-              Documentation
-            </h1>
-            <p className="text-slate-400">
-              Learn how RepVote works and how to participate in governance
-            </p>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <PageHeader
+        title="Documentation"
+        subtitle="Learn how RepVote works and how to participate in governance"
+        icon={<BookOpen className="w-5 h-5 text-emerald-300" />}
+      />
 
       {/* Main Content */}
-      <main className="px-6 sm:px-8 lg:px-12 py-8 max-w-6xl mx-auto">
+      <main className="rv-container py-8">
+        <div className="max-w-6xl mx-auto">
         {/* Quick Start */}
-        <section className="mb-12 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-lg rounded-2xl p-8 border border-emerald-500/30">
+        <section className="mb-12 rv-card p-8 border-emerald-500/30">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
             <Zap className="w-6 h-6 text-emerald-400" />
             Quick Start
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-800/40 rounded-lg p-6 border border-slate-700/50">
+            <div className="rv-card-soft rounded-xl p-6">
               <div className="text-3xl font-bold text-emerald-400 mb-2">1</div>
               <h3 className="font-semibold text-white mb-2">Connect Wallet</h3>
               <p className="text-sm text-slate-400">
                 Connect your MetaMask or Web3 wallet to the Arbitrum Sepolia network
               </p>
             </div>
-            <div className="bg-slate-800/40 rounded-lg p-6 border border-slate-700/50">
+            <div className="rv-card-soft rounded-xl p-6">
               <div className="text-3xl font-bold text-emerald-400 mb-2">2</div>
               <h3 className="font-semibold text-white mb-2">Vote on Polls</h3>
               <p className="text-sm text-slate-400">
                 Browse active polls and cast your votes to earn reputation
               </p>
             </div>
-            <div className="bg-slate-800/40 rounded-lg p-6 border border-slate-700/50">
+            <div className="rv-card-soft rounded-xl p-6">
               <div className="text-3xl font-bold text-emerald-400 mb-2">3</div>
               <h3 className="font-semibold text-white mb-2">Build Reputation</h3>
               <p className="text-sm text-slate-400">
@@ -58,7 +51,7 @@ export default function DocsPage() {
           <h2 className="text-2xl font-bold text-white mb-6">Core Concepts</h2>
           <div className="space-y-6">
             {/* Reputation System */}
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-8 border border-slate-700/50">
+            <div className="rv-card p-8">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-500/20 rounded-lg border border-emerald-500/30">
                   <Award className="w-6 h-6 text-emerald-400" />
@@ -68,7 +61,7 @@ export default function DocsPage() {
                   <p className="text-slate-300 mb-4">
                     RepVote uses a reputation-based system to reward active participants and prevent Sybil attacks.
                   </p>
-                  <div className="bg-slate-800/50 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="rv-card-soft rounded-xl p-4 space-y-2 text-sm">
                     <div className="flex items-center gap-3">
                       <span className="text-emerald-400 font-mono">+10 REP</span>
                       <span className="text-slate-400">per vote cast</span>
@@ -87,7 +80,7 @@ export default function DocsPage() {
             </div>
 
             {/* Quadratic Voting */}
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-8 border border-slate-700/50">
+            <div className="rv-card p-8">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-teal-500/20 rounded-lg border border-teal-500/30">
                   <TrendingUp className="w-6 h-6 text-teal-400" />
@@ -97,7 +90,7 @@ export default function DocsPage() {
                   <p className="text-slate-300 mb-4">
                     Vote weight scales with the square root of credits spent, preventing vote concentration.
                   </p>
-                  <div className="bg-slate-800/50 rounded-lg p-4">
+                  <div className="rv-card-soft rounded-xl p-4">
                     <p className="text-sm text-slate-400 mb-2">Formula:</p>
                     <p className="font-mono text-emerald-400 text-lg">
                       vote_weight = √(credits) × reputation_multiplier
@@ -111,7 +104,7 @@ export default function DocsPage() {
             </div>
 
             {/* Sybil Resistance */}
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-8 border border-slate-700/50">
+            <div className="rv-card p-8">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-red-500/20 rounded-lg border border-red-500/30">
                   <Shield className="w-6 h-6 text-red-400" />
@@ -144,7 +137,7 @@ export default function DocsPage() {
         {/* Reputation Tiers */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6">Reputation Tiers</h2>
-          <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-8 border border-slate-700/50">
+          <div className="rv-card p-8">
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/30">
                 <div>
@@ -219,7 +212,7 @@ export default function DocsPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6">Technical Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <div className="rv-card p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Code className="w-5 h-5 text-emerald-400" />
                 <h3 className="text-lg font-bold text-white">Smart Contracts</h3>
@@ -232,7 +225,7 @@ export default function DocsPage() {
               </ul>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <div className="rv-card p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Lock className="w-5 h-5 text-amber-400" />
                 <h3 className="text-lg font-bold text-white">Security</h3>
@@ -251,28 +244,28 @@ export default function DocsPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <div className="rv-card p-6">
               <h3 className="text-lg font-semibold text-white mb-2">How do I earn reputation?</h3>
               <p className="text-slate-300 text-sm">
                 You earn 10 reputation points for each vote you cast. Participate consistently to build your reputation and increase your voting power.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <div className="rv-card p-6">
               <h3 className="text-lg font-semibold text-white mb-2">What happens if I don't vote for a long time?</h3>
               <p className="text-slate-300 text-sm">
                 Your reputation decays at 5% per month of inactivity. This prevents abandoned accounts from being reused and encourages active participation.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <div className="rv-card p-6">
               <h3 className="text-lg font-semibold text-white mb-2">Can I change my vote?</h3>
               <p className="text-slate-300 text-sm">
                 No, votes are final once submitted. This prevents manipulation and ensures voting integrity. Consider your choice carefully before voting.
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+            <div className="rv-card p-6">
               <h3 className="text-lg font-semibold text-white mb-2">How many credits should I spend?</h3>
               <p className="text-slate-300 text-sm">
                 You can spend 1-100 credits per vote. Due to quadratic voting, spending more credits has diminishing returns. For example, 100 credits gives √100 = 10 base votes, while 25 credits gives 5 base votes.
@@ -282,32 +275,33 @@ export default function DocsPage() {
         </section>
 
         {/* Get Help */}
-        <section className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 backdrop-blur-lg rounded-2xl p-8 border border-emerald-500/30">
+        <section className="rv-card p-8 border-emerald-500/30">
           <h2 className="text-2xl font-bold text-white mb-4">Need Help?</h2>
           <p className="text-slate-300 mb-6">
             Join our community or explore more resources:
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
             <a
               href="https://github.com"
-              className="px-6 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-lg text-white font-semibold transition-all"
+              className="rv-btn-secondary"
             >
               📚 View on GitHub
             </a>
             <a
               href="https://discord.com"
-              className="px-6 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-lg text-white font-semibold transition-all"
+              className="rv-btn-secondary"
             >
               💬 Join Discord
             </a>
             <a
               href="https://twitter.com"
-              className="px-6 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/30 rounded-lg text-white font-semibold transition-all"
+              className="rv-btn-secondary"
             >
               🐦 Follow on Twitter
             </a>
           </div>
         </section>
+        </div>
       </main>
     </div>
   );

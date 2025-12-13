@@ -62,18 +62,7 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
 
   // Debug logging
   useEffect(() => {
-    console.log("📊 ResultsChart Update:", {
-      pollAddress,
-      results: results?.map((r) => r.toString()),
-      totalVoters: totalVoters?.toString(),
-      isLoading,
-      isFetching,
-      isRefetching,
-      refreshKey,
-      lastUpdateTime: lastUpdateTime
-        ? new Date(lastUpdateTime).toLocaleTimeString()
-        : "Never",
-    });
+    // Intentionally no console spam in production UI.
   }, [
     results,
     totalVoters,

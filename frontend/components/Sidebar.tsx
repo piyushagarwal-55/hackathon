@@ -46,12 +46,17 @@ export function Sidebar() {
             <Link
               key={item.id}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+              className={`group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                 active
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/50'
+                  ? 'bg-emerald-500/12 text-emerald-300 border border-emerald-500/30 shadow-lg shadow-emerald-500/10'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
               }`}
             >
+              <span
+                className={`absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full transition-all ${
+                  active ? 'bg-emerald-400' : 'bg-transparent group-hover:bg-slate-600'
+                }`}
+              />
               <Icon className="w-5 h-5" />
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
@@ -67,10 +72,6 @@ export function Sidebar() {
             <p className="text-sm font-mono text-emerald-400 truncate">
               {address.slice(0, 6)}...{address.slice(-4)}
             </p>
-            <div className="mt-3 text-center text-xs text-slate-400">
-              Reputation Score
-              <p className="text-lg font-bold text-emerald-400">---</p>
-            </div>
           </div>
         ) : null}
         <div className="flex justify-center">

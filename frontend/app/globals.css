@@ -21,6 +21,57 @@ body {
   overflow-x: hidden;
 }
 
+@layer components {
+  .rv-container {
+    @apply px-6 sm:px-8 lg:px-12;
+  }
+
+  .rv-card {
+    @apply bg-gradient-to-br from-slate-900/40 to-slate-800/15 backdrop-blur-xl
+      border border-slate-700/50 rounded-2xl;
+  }
+
+  .rv-card-soft {
+    @apply bg-slate-900/30 backdrop-blur-xl border border-slate-700/40 rounded-2xl;
+  }
+
+  .rv-chip {
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold
+      bg-slate-900/50 border border-slate-700/50 text-slate-200;
+  }
+
+  .rv-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold
+      transition-all disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .rv-btn-primary {
+    @apply rv-btn px-5 py-2.5 text-white
+      bg-gradient-to-r from-emerald-600 to-teal-600
+      hover:from-emerald-500 hover:to-teal-500
+      shadow-lg shadow-emerald-500/20;
+  }
+
+  .rv-btn-secondary {
+    @apply rv-btn px-5 py-2.5 text-slate-100
+      bg-slate-900/40 border border-slate-700/60
+      hover:bg-slate-800/60 hover:border-slate-600/60;
+  }
+
+  .rv-tabs {
+    @apply inline-flex gap-1.5 bg-slate-900/30 backdrop-blur-xl rounded-xl p-1.5
+      border border-slate-700/50;
+  }
+
+  .rv-tab {
+    @apply px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-300 hover:text-white;
+  }
+
+  .rv-tab-active {
+    @apply bg-slate-100/10 border border-slate-700/60 text-white shadow-lg shadow-black/20;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

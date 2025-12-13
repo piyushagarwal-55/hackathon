@@ -36,19 +36,12 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
 
   // Debug logging
   useEffect(() => {
-    console.log("PollList data state:", {
-      recentPolls,
-      isLoading,
-      isError,
-      error,
-      pollCount: recentPolls?.length
-    });
+    // Intentionally no console spam in production UI.
   }, [recentPolls, isLoading, isError, error]);
 
   // Refetch when refreshTrigger changes (from parent)
   useEffect(() => {
     if (refreshTrigger !== undefined && refreshTrigger > 0) {
-      console.log("Refetching polls due to refreshTrigger:", refreshTrigger);
       refetch();
     }
   }, [refreshTrigger, refetch]);
