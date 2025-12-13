@@ -5,11 +5,13 @@ import "forge-std/Test.sol";
 import "../src/ReputationRegistry.sol";
 import "../src/PollFactory.sol";
 import "../src/Poll.sol";
+import "../src/MockRepToken.sol";
 
 contract RepVoteTest is Test {
     ReputationRegistry public repRegistry;
     PollFactory public factory;
     Poll public poll;
+    MockRepToken public token;
     
     address public owner = address(this);
     address public alice = address(0x1);
@@ -22,8 +24,9 @@ contract RepVoteTest is Test {
     
     function setUp() public {
         // Deploy contracts
+        token = new MockRepToken();
         repRegistry = new ReputationRegistry();
-        factory = new PollFactory(address(repRegistry));
+        factory = new PollFactory(address(repRegistry), address(token));
         
         // Authorize factory to update reputation
         repRegistry.addAuthorized(address(factory));
@@ -99,15 +102,21 @@ contract RepVoteTest is Test {
     
     function testQuadraticScaling() public {
         // Bob votes with 4 credits (rep=100, multiplier=1.5x)
-        vm.prank(bob);
-        poll.vote(0, 4);  // √4 = 2, 2 * 1.5 = 3 votes
+        vm.startPrank(bob);
+        token.faucet(); // Get tokens
+        token.approve(address(poll), 4 * 1e18);
+        poll.vote(0, 4 * 1e18);  // √4 = 2, 2 * 1.5 = 3 votes
+        vm.stopPrank();
         
         (,, uint256 bobVotes,) = poll.votes(bob);
         assertEq(bobVotes, 3, "4 credits should give 3 weighted votes");
         
         // Charlie votes with 16 credits (rep=10, multiplier=0.5x)
-        vm.prank(charlie);
-        poll.vote(1, 16);  // √16 = 4, 4 * 0.5 = 2 votes
+        vm.startPrank(charlie);
+        token.faucet();
+        token.approve(address(poll), 16 * 1e18);
+        poll.vote(1, 16 * 1e18);  // √16 = 4, 4 * 0.5 = 2 votes
+        vm.stopPrank();
         
         (,, uint256 charlieVotes,) = poll.votes(charlie);
         assertEq(charlieVotes, 2, "16 credits should give 2 weighted votes");

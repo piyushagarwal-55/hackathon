@@ -28,8 +28,18 @@ export function Navigation({ onCreateClick, showCreateButton = true }: Navigatio
   };
 
   return (
-    <nav className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <>
+      {/* Testnet Banner */}
+      <div className="bg-amber-500/20 border-b border-amber-500/30 py-2 z-50">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <span className="text-amber-400 font-semibold text-sm">
+            🚧 TESTNET DEMO - Using Free Mock Tokens (No Real Money)
+          </span>
+        </div>
+      </div>
+
+      <nav className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <div className="flex items-center gap-8">
@@ -107,7 +117,8 @@ export function Navigation({ onCreateClick, showCreateButton = true }: Navigatio
           </div>
         </div>
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }
 

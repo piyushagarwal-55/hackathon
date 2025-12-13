@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
-import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI, POLL_ABI } from '@/lib/contracts';
+import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI, POLL_ABI, MOCK_TOKEN_ADDRESS, ERC20_ABI } from '@/lib/contracts';
 import { calculateVoteWeight, formatNumber, getReputationLevel } from '@/lib/calculations';
 import { toast } from 'sonner';
 import { CheckCircle2, TrendingUp, Info, Zap, Scale } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { MarketChart } from './MarketChart';
+import { TokenFaucet } from './TokenFaucet';
+import { parseUnits, formatUnits } from 'viem';
 
 interface PolymarketStyleVoteProps {
   pollAddress: `0x${string}`;
@@ -35,6 +37,30 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,
+    },
+  });
+
+  // Get user's token balance
+  const { data: tokenBalance, refetch: refetchBalance } = useReadContract({
+    address: MOCK_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+      refetchInterval: 10000,
+    },
+  });
+
+  // Get token allowance
+  const { data: tokenAllowance, refetch: refetchAllowance } = useReadContract({
+    address: MOCK_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: address && pollAddress ? [address, pollAddress] : undefined,
+    query: {
+      enabled: !!address && isConnected && !isZeroAddress,
+      refetchInterval: 10000,
     },
   });
 
@@ -86,15 +112,52 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
           predicate: (query) => JSON.stringify(query.queryKey).includes(pollAddress.toLowerCase())
         });
         refetchVote();
+        refetchBalance();
+        refetchAllowance();
         if (onVoteSuccess) onVoteSuccess();
         toast.success('✅ Vote successfully recorded!');
       }, 2000);
     }
-  }, [isSuccess, refetchVote, onVoteSuccess, hash, queryClient, pollAddress]);
+  }, [isSuccess, refetchVote, refetchBalance, refetchAllowance, onVoteSuccess, hash, queryClient, pollAddress]);
+
+  const handleApprove = async () => {
+    if (!isConnected) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
+    const tokenAmount = parseUnits(creditsSpent.toString(), 18);
+
+    try {
+      writeContract({
+        address: MOCK_TOKEN_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: 'approve',
+        args: [pollAddress, tokenAmount],
+      });
+      toast.info('Approval transaction submitted...');
+    } catch (error: any) {
+      toast.error(error.shortMessage || error.message || 'Failed to approve tokens');
+    }
+  };
 
   const handleVote = async () => {
     if (!isConnected) {
       toast.error('Please connect your wallet');
+      return;
+    }
+
+    const tokenAmount = parseUnits(creditsSpent.toString(), 18);
+
+    // Check if user has enough tokens
+    if (tokenBalance && tokenBalance < tokenAmount) {
+      toast.error('Insufficient REP tokens. Get free tokens from the faucet!');
+      return;
+    }
+
+    // Check if approval is needed
+    if (!tokenAllowance || tokenAllowance < tokenAmount) {
+      toast.error('Please approve REP tokens first');
       return;
     }
 
@@ -103,9 +166,9 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
         address: pollAddress,
         abi: POLL_ABI,
         functionName: 'vote',
-        args: [BigInt(selectedOption), BigInt(creditsSpent)],
+        args: [BigInt(selectedOption), tokenAmount],
       });
-      toast.info('Transaction submitted...');
+      toast.info('Vote transaction submitted...');
     } catch (error: any) {
       toast.error(error.shortMessage || error.message || 'Failed to cast vote');
     }
@@ -346,25 +409,25 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
 
               {/* Amount Input */}
               <div className="mb-4">
-                <label className="text-xs text-slate-400 mb-2 block">Amount</label>
+                <label className="text-xs text-slate-400 mb-2 block">Amount (REP Tokens)</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-slate-400">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-emerald-400 font-semibold">REP</span>
                   <input
                     type="number"
                     value={creditsSpent}
                     onChange={(e) => setCreditsSpent(Number(e.target.value))}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-800/60 border border-slate-700/60 rounded-lg text-white text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    className="w-full pl-16 pr-4 py-3 bg-slate-800/60 border border-slate-700/60 rounded-lg text-white text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     placeholder="0"
                   />
                 </div>
                 <div className="flex gap-2 mt-2">
-                  {[1, 20, 100].map((val) => (
+                  {[10, 50, 100].map((val) => (
                     <button
                       key={val}
                       onClick={() => setCreditsSpent(val)}
                       className="px-3 py-1.5 bg-slate-800/40 border border-slate-700/40 rounded text-xs text-slate-300 hover:text-white hover:bg-slate-800/60"
                     >
-                      +${val}
+                      {val} REP
                     </button>
                   ))}
                   <button
@@ -375,6 +438,22 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
                   </button>
                 </div>
               </div>
+
+              {/* Token Faucet */}
+              <div className="mb-4">
+                <TokenFaucet />
+              </div>
+
+              {/* Approval Button */}
+              {tokenBalance && tokenAllowance !== undefined && tokenAllowance < parseUnits(creditsSpent.toString(), 18) && (
+                <button
+                  onClick={handleApprove}
+                  disabled={isPending || isConfirming}
+                  className="w-full py-3 mb-4 rounded-lg font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all"
+                >
+                  {isPending || isConfirming ? '🔐 Approving...' : `Approve ${creditsSpent} REP Tokens`}
+                </button>
+              )}
 
               {/* Vote Weight Preview */}
               <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-lg p-4 mb-4">

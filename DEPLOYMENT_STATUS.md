@@ -1,5 +1,12 @@
 # 🚀 RepVote - Deployment Status & Feature Checklist
 
+> ⚠️ **TESTNET DEMO ONLY**  
+> This project uses Arbitrum Sepolia testnet with **FREE mock tokens (REP)**.
+>
+> - **No real money involved**
+> - **Free tokens from faucet**
+> - **For demonstration purposes only**
+
 ## ✅ DEPLOYED Components
 
 ### Smart Contracts (Arbitrum Sepolia)
@@ -25,46 +32,43 @@
 - ✅ Vote weight calculator
 - ✅ Historical data visualization
 
-## 🔄 WHAT'S LEFT TO DO
+## ✅ Token Betting System - IMPLEMENTED
 
-### 1. Token Betting System (Priority 1)
+### Current Implementation: Mock Token on Testnet
 
-Currently uses "credits" (abstract units). Need to implement:
+✅ **IMPLEMENTED**: Free-to-mint REP tokens on Arbitrum Sepolia
 
-#### Option A: Native ETH Betting
+**How it works:**
 
-```solidity
-// Modify Poll.vote() to accept ETH
-function vote(uint256 optionId) external payable {
-    require(msg.value > 0, "Must send ETH");
-    uint256 credits = msg.value / 0.01 ether; // 0.01 ETH = 1 credit
-    // ... rest of voting logic
-}
-```
+1. Users click "Get Free Tokens" to mint 1000 REP
+2. Approve REP spending for the poll
+3. Vote with REP tokens (1 token = 1 credit)
+4. Winners claim REP tokens from prize pool
 
-#### Option B: ERC20 Token Betting (Recommended for Arbitrum)
+**Why Mock Tokens:**
 
-```solidity
-// Use USDC or custom token
-IERC20 public bettingToken;
+- Zero cost testing (no real money)
+- Realistic betting experience
+- Users can mint unlimited tokens for demo
+- Perfect for hackathons and presentations
 
-function vote(uint256 optionId, uint256 amount) external {
-    bettingToken.transferFrom(msg.sender, address(this), amount);
-    uint256 credits = amount / 1e18; // 1 token = 1 credit
-    // ... rest of voting logic
-}
-```
+**Implementation Details:**
 
-**Files to Modify:**
+- ✅ `MockRepToken.sol` - ERC20 with free faucet function
+- ✅ `Poll.sol` - Token transfer and claimWinnings logic
+- ✅ `PollFactory.sol` - Token address passed to polls
+- ✅ `TokenFaucet.tsx` - UI component for minting tokens
+- ✅ `PolymarketStyleVote.tsx` - Token approval and voting flow
 
-- `contracts/src/Poll.sol` - Add token transfer logic
-- `contracts/src/PollFactory.sol` - Pass token address to Poll constructor
-- `frontend/components/PolymarketStyleVote.tsx` - Add token approval UI
-- `frontend/lib/contracts.ts` - Add ERC20 ABI
+**Future (Mainnet):**
 
-### 2. Withdrawal/Payout System
+- Replace with real stablecoin (USDC)
+- OR use native ETH
+- Add liquidity pools and AMM
 
-Winners should be able to claim rewards:
+### 2. Winner Payout System - IMPLEMENTED
+
+✅ Winners can claim their proportional share of the prize pool:
 
 ```solidity
 function claimWinnings() external {

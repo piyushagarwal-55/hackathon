@@ -4,6 +4,8 @@
  */
 
 // Deployed contract addresses (Arbitrum Sepolia Testnet)
+export const MOCK_TOKEN_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as `0x${string}`; // Update after deployment
 export const REPUTATION_REGISTRY_ADDRESS =
   "0x45b836A4a501699d428119D481186804ACeD9C9C" as `0x${string}`;
 export const POLL_FACTORY_ADDRESS =
@@ -87,15 +89,101 @@ export const POLL_FACTORY_ABI = [
   },
 ] as const;
 
+export const ERC20_ABI = [
+  {
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    name: "allowance",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "faucet",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "name",
+    outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
 export const POLL_ABI = [
   {
     inputs: [
       { name: "optionId", type: "uint256" },
-      { name: "credits", type: "uint256" },
+      { name: "tokenAmount", type: "uint256" },
     ],
     name: "vote",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "claimWinnings",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalBetAmount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "", type: "address" }],
+    name: "userBets",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "", type: "address" }],
+    name: "hasClaimed",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "view",
     type: "function",
   },
   {

@@ -5,6 +5,7 @@ import "forge-std/Script.sol";
 import "../src/ReputationRegistry.sol";
 import "../src/PollFactory.sol";
 import "../src/Poll.sol";
+import "../src/MockRepToken.sol";
 
 /**
  * @title DeployScript
@@ -17,19 +18,23 @@ contract DeployScript is Script {
         
         vm.startBroadcast(deployerPrivateKey);
         
-        // 1. Deploy ReputationRegistry
+        // 1. Deploy MockRepToken (for testnet demo)
+        MockRepToken token = new MockRepToken();
+        console.log("MockRepToken deployed at:", address(token));
+        
+        // 2. Deploy ReputationRegistry
         ReputationRegistry repRegistry = new ReputationRegistry();
         console.log("ReputationRegistry deployed at:", address(repRegistry));
         
-        // 2. Deploy PollFactory
-        PollFactory factory = new PollFactory(address(repRegistry));
+        // 3. Deploy PollFactory with token address
+        PollFactory factory = new PollFactory(address(repRegistry), address(token));
         console.log("PollFactory deployed at:", address(factory));
         
-        // 3. Set factory in ReputationRegistry (allows factory to authorize polls)
+        // 4. Set factory in ReputationRegistry (allows factory to authorize polls)
         repRegistry.setFactory(address(factory));
         console.log("Factory set and authorized in ReputationRegistry");
         
-        // 4. Bootstrap some initial reputation for demo accounts (optional)
+        // 5. Bootstrap some initial reputation for demo accounts (optional)
         address deployer = msg.sender;
         address[] memory users = new address[](1);
         uint256[] memory reps = new uint256[](1);
@@ -40,7 +45,7 @@ contract DeployScript is Script {
         repRegistry.bootstrapReputation(users, reps);
         console.log("Bootstrapped reputation for deployer");
         
-        // 5. Create a demo poll
+        // 6. Create a demo poll
         string[] memory options = new string[](3);
         options[0] = "Security Audit";
         options[1] = "Mobile App Development";
@@ -59,6 +64,7 @@ contract DeployScript is Script {
         
         // Print deployment summary
         console.log("\n=== Deployment Summary ===");
+        console.log("MockRepToken:", address(token));
         console.log("ReputationRegistry:", address(repRegistry));
         console.log("PollFactory:", address(factory));
         console.log("Demo Poll:", demoPoll);

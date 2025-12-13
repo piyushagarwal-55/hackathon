@@ -13,6 +13,7 @@ contract PollFactory {
     // ============ State Variables ============
     
     ReputationRegistry public immutable repRegistry;
+    address public immutable bettingToken;
     
     address[] public allPolls;
     mapping(address => address[]) public pollsByCreator;
@@ -29,8 +30,9 @@ contract PollFactory {
     
     // ============ Constructor ============
     
-    constructor(address _repRegistry) {
+    constructor(address _repRegistry, address _bettingToken) {
         repRegistry = ReputationRegistry(_repRegistry);
+        bettingToken = _bettingToken;
     }
     
     // ============ Core Functions ============
@@ -58,6 +60,7 @@ contract PollFactory {
         // Deploy new Poll contract
         Poll newPoll = new Poll(
             address(repRegistry),
+            bettingToken,
             question,
             options,
             duration,

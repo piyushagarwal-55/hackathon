@@ -1,8 +1,15 @@
-# 💰 ETH Betting Implementation Guide
+# 💰 Mock Token Betting Implementation Guide
+
+> ⚠️ **TESTNET DEMO ONLY**  
+> This project uses Arbitrum Sepolia testnet with **FREE mock tokens (REP)**.
+>
+> - **No real money involved**
+> - **Free tokens from faucet**
+> - **For demonstration purposes only**
 
 ## Quick Summary
 
-Convert abstract "credits" to real ETH betting on Arbitrum Sepolia.
+This system uses **MockRepToken** - a free-to-mint ERC20 token for testnet demonstration. Users can get unlimited tokens from the faucet and bet them on polls without any real financial risk.
 
 ## Contract Modifications Needed
 

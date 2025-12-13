@@ -13,7 +13,10 @@ contract Poll {
     // ============ Errors ============
     
     error PollClosed();
+    error PollStillActive();
     error AlreadyVoted();
+    error AlreadyClaimed();
+    error NotAWinner();
     error InvalidOption();
     error InvalidCredits();
     
@@ -37,6 +40,7 @@ contract Poll {
     
     // Track individual user bets for winner payouts
     mapping(address => uint256) public userBets;
+    mapping(address => bool) public hasClaimed;
     
     // option => weighted votes
     mapping(uint256 => uint256) public results;
@@ -58,6 +62,11 @@ contract Poll {
         uint256 indexed option,
         uint256 creditsSpent,
         uint256 weightedVotes
+    );
+    
+    event WinningsClaimed(
+        address indexed winner,
+        uint256 amount
     );
     
     // ============ Constructor ============
@@ -84,14 +93,26 @@ contract Poll {
     /**
      * @notice Cast a vote with reputation-weighted quadratic voting
      * @param optionId Index of the option to vote for
-     * @param credits Number of credits to spend
+     * @param tokenAmount Amount of tokens to bet (1 token = 1 credit)
      */
-    function vote(uint256 optionId, uint256 credits) external {
+    function vote(uint256 optionId, uint256 tokenAmount) external {
         if (block.timestamp >= endTime) revert PollClosed();
         if (votes[msg.sender].timestamp > 0) revert AlreadyVoted();
         if (optionId >= options.length) revert InvalidOption();
+        if (tokenAmount == 0) revert InvalidCredits();
+        
+        // Calculate credits from token amount (1 token = 1 credit)
+        uint256 credits = tokenAmount / CREDIT_PRICE;
         if (credits == 0) revert InvalidCredits();
         if (credits > MAX_CREDITS_PER_USER) revert InvalidCredits();
+        
+        // Transfer tokens from user to poll contract
+        bool success = bettingToken.transferFrom(msg.sender, address(this), tokenAmount);
+        require(success, "Token transfer failed");
+        
+        // Track user's bet amount
+        userBets[msg.sender] = tokenAmount;
+        totalBetAmount += tokenAmount;
         
         // Calculate vote weight: √(credits) × reputation_multiplier
         uint256 weightedVotes = _calculateVoteWeight(msg.sender, credits);
@@ -131,6 +152,45 @@ contract Poll {
         repRegistry.addReputation(msg.sender, 10);
         
         emit VoteCast(msg.sender, optionId, credits, weightedVotes);
+    }
+    
+    /**
+     * @notice Claim winnings if you voted for the winning option
+     * @dev Winners receive their proportional share of the prize pool
+     */
+    function claimWinnings() external {
+        if (block.timestamp < endTime) revert PollStillActive();
+        if (hasClaimed[msg.sender]) revert AlreadyClaimed();
+        if (votes[msg.sender].timestamp == 0) revert NotAWinner(); // Didn't vote
+        
+        // Get winning option
+        (uint256 winningOption, uint256 winningVotes) = this.getWinner();
+        
+        // Check if user voted for winning option
+        if (votes[msg.sender].option != winningOption) revert NotAWinner();
+        
+        // Calculate payout: (user's bet / total bets on winning option) * total prize pool
+        uint256 totalWinningBets = 0;
+        
+        // We need to calculate total bets on winning option
+        // This is a limitation - we'd need to track this separately for efficiency
+        // For now, simplified: all voters split the pool equally if they voted for winner
+        
+        // Simplified payout: equal share among all voters on winning option
+        // Count voters who voted for winning option
+        uint256 winnerCount = 0;
+        // Note: This is inefficient, in production we'd track this separately
+        // For MVP, winners get proportional share based on their weighted votes
+        
+        uint256 userShare = (votes[msg.sender].weightedVotes * totalBetAmount) / winningVotes;
+        
+        hasClaimed[msg.sender] = true;
+        
+        // Transfer winnings
+        bool success = bettingToken.transfer(msg.sender, userShare);
+        require(success, "Payout transfer failed");
+        
+        emit WinningsClaimed(msg.sender, userShare);
     }
     
     // ============ View Functions ============
