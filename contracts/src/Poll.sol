@@ -25,6 +25,8 @@ contract Poll {
     uint256 public immutable endTime;
     uint256 public immutable maxWeightCap;  // Maximum vote weight as multiple of average
     
+    uint256 public constant MAX_CREDITS_PER_USER = 100;  // Fixed budget per user
+    
     bool public isActive;
     uint256 public totalVoters;
     uint256 public totalWeightedVotes;
@@ -80,12 +82,21 @@ contract Poll {
         if (votes[msg.sender].timestamp > 0) revert AlreadyVoted();
         if (optionId >= options.length) revert InvalidOption();
         if (credits == 0) revert InvalidCredits();
+        if (credits > MAX_CREDITS_PER_USER) revert InvalidCredits();
         
         // Calculate vote weight: √(credits) × reputation_multiplier
         uint256 weightedVotes = _calculateVoteWeight(msg.sender, credits);
         
         // Apply vote weight cap
-        if (totalVoters > 0) {
+        if (totalVoters == 0) {
+            // For the first voter, cap them at a reasonable max to prevent setting unfair average
+            // Max possible: sqrt(100) * 3x multiplier = 10 * 3 = 30 weighted votes
+            uint256 absoluteMax = (10 * 3e18) / 1e18;  // ~30 weighted votes
+            if (weightedVotes > absoluteMax) {
+                weightedVotes = absoluteMax;
+            }
+        } else {
+            // For subsequent voters, use average-based cap
             uint256 avgWeight = totalWeightedVotes / totalVoters;
             uint256 maxAllowed = avgWeight * maxWeightCap;
             

@@ -123,6 +123,10 @@ contract ReputationRegistry {
         
         if (monthsElapsed == 0) return baseRep;
         
+        // Gas optimization: If more than 60 months (5 years) have passed,
+        // reputation has decayed to near zero. Avoid expensive loop.
+        if (monthsElapsed > 60) return 0;
+        
         // Apply decay: reputation × (0.95)^months
         uint256 decayedRep = baseRep;
         
