@@ -22,7 +22,7 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
   );
 
   // Fetch recent polls with query configuration
-  const { data: recentPolls, refetch, isLoading, isError, error } = useReadContract({
+  const { data: recentPolls, refetch, isLoading, isError, error, status } = useReadContract({
     address: POLL_FACTORY_ADDRESS,
     abi: POLL_FACTORY_ABI,
     functionName: "getRecentPolls",
@@ -31,6 +31,12 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
       refetchInterval: 5000, // Refetch every 5 seconds
     },
   });
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PollList.tsx:36',message:'PollList query state',data:{factoryAddress:POLL_FACTORY_ADDRESS,hasPolls:!!recentPolls,pollCount:recentPolls?.length||0,isLoading,isError,errorMsg:error?.message||null,status},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D',runId:'post-fix'})}).catch(()=>{});
+  }, [recentPolls, isLoading, isError, error, status]);
+  // #endregion
 
   // Debug logging
   useEffect(() => {
@@ -75,7 +81,16 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
         <div className="text-6xl mb-4">📋</div>
         <h3 className="text-xl font-bold text-white mb-2">No Polls Yet</h3>
-        <p className="text-slate-400">Create the first poll to get started!</p>
+        <p className="text-slate-400 mb-4">Create the first poll to get started!</p>
+        <div className="mt-6 p-4 bg-amber-950/30 border border-amber-500/30 rounded-lg">
+          <p className="text-amber-400 text-sm font-semibold mb-2">⚠️ Setup Required</p>
+          <p className="text-slate-300 text-xs mb-3">To create polls, ensure your local blockchain is running:</p>
+          <ol className="text-left text-slate-400 text-xs space-y-1 max-w-md mx-auto">
+            <li>1. Start Anvil: <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">anvil --host 0.0.0.0 --cors-origins "*"</code></li>
+            <li>2. Deploy contracts: <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">forge script script/DeployLocal.s.sol --broadcast --rpc-url http://localhost:8545</code></li>
+            <li>3. Connect MetaMask to Anvil (Chain ID: 31337, RPC: http://localhost:3000/api/rpc)</li>
+          </ol>
+        </div>
       </div>
     );
   }
