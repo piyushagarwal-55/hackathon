@@ -15,6 +15,7 @@ contract ReputationRegistry {
     // ============ State Variables ============
     
     address public owner;
+    address public factory;  // PollFactory that can authorize new polls
     
     // user => reputation score
     mapping(address => uint256) public reputation;
@@ -51,6 +52,11 @@ contract ReputationRegistry {
     
     modifier onlyAuthorized() {
         if (!authorized[msg.sender]) revert Unauthorized();
+        _;
+    }
+    
+    modifier onlyFactory() {
+        if (msg.sender != factory) revert Unauthorized();
         _;
     }
     
@@ -93,6 +99,24 @@ contract ReputationRegistry {
     function addAuthorized(address account) external onlyOwner {
         authorized[account] = true;
         emit AuthorizedAdded(account);
+    }
+    
+    /**
+     * @notice Set the PollFactory address (one-time setup)
+     */
+    function setFactory(address _factory) external onlyOwner {
+        require(factory == address(0), "Factory already set");
+        factory = _factory;
+        authorized[_factory] = true;
+        emit AuthorizedAdded(_factory);
+    }
+    
+    /**
+     * @notice Authorize a poll (called by factory when creating polls)
+     */
+    function authorizePoll(address poll) external onlyFactory {
+        authorized[poll] = true;
+        emit AuthorizedAdded(poll);
     }
     
     /**

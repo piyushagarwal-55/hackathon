@@ -24,9 +24,9 @@ contract DeployLocalScript is Script {
         PollFactory factory = new PollFactory(address(repRegistry));
         console.log("PollFactory deployed at:", address(factory));
         
-        // 3. Authorize factory to update reputation
-        repRegistry.addAuthorized(address(factory));
-        console.log("Factory authorized to update reputation");
+        // 3. Set factory in ReputationRegistry (allows factory to authorize polls)
+        repRegistry.setFactory(address(factory));
+        console.log("Factory set and authorized in ReputationRegistry");
         
         // 4. Bootstrap some test reputation for demo
         address deployer = msg.sender;
@@ -56,9 +56,6 @@ contract DeployLocalScript is Script {
             7 days,
             10  // 10x max weight cap
         );
-        
-        // Authorize the demo poll
-        repRegistry.addAuthorized(demoPoll);
         
         console.log("Demo Poll deployed at:", demoPoll);
         

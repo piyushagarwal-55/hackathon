@@ -66,6 +66,9 @@ contract PollFactory {
         
         pollAddress = address(newPoll);
         
+        // Authorize the new poll to update reputation
+        repRegistry.authorizePoll(pollAddress);
+        
         // Track the poll
         allPolls.push(pollAddress);
         pollsByCreator[msg.sender].push(pollAddress);
