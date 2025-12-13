@@ -58,9 +58,9 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
     functionName: "getResults",
     query: {
       enabled: !isZeroAddress, // Disable query if zero address
-      refetchInterval: isZeroAddress ? false : 2000, // Stop polling if zero address
-      staleTime: 0, // Always consider stale to force refetch
-      gcTime: 0, // Don't cache
+      refetchInterval: isZeroAddress ? false : 5000, // Reduced frequency to avoid timeouts
+      staleTime: 1000,
+      gcTime: 5000,
     },
   });
 
@@ -111,9 +111,9 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
     functionName: "totalVoters",
     query: {
       enabled: !isZeroAddress, // Disable query if zero address
-      refetchInterval: isZeroAddress ? false : 2000, // Stop polling if zero address
-      staleTime: 0,
-      gcTime: 0,
+      refetchInterval: isZeroAddress ? false : 5000, // Reduced frequency to avoid timeouts
+      staleTime: 1000,
+      gcTime: 5000,
     },
   });
 
@@ -165,11 +165,12 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
     pollAddress,
   ]);
 
-  // Listen for new votes with proper event handling
+  // Listen for new votes with proper event handling - disabled if zero address
   useWatchContractEvent({
-    address: pollAddress,
+    address: isZeroAddress ? undefined : pollAddress,
     abi: POLL_ABI,
     eventName: "VoteCast",
+    enabled: !isZeroAddress,
     onLogs(logs) {
       console.log("🎯 VoteCast Event Detected!", logs);
       // #region agent log
@@ -202,7 +203,7 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
       setRefreshKey((prev) => prev + 1);
     },
     poll: true,
-    pollingInterval: 1000,
+    pollingInterval: 3000, // Reduced frequency
   });
 
   const totalVotes = results

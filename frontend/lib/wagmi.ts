@@ -49,11 +49,11 @@ export const config = createConfig({
     injected(), // MetaMask, Coinbase Wallet, etc.
   ],
   transports: {
-    // Use multiple fallback RPC endpoints for Arbitrum Sepolia reliability
+    // Use Arbitrum Sepolia with extended timeout to prevent AbortError
     [arbitrumSepolia.id]: http("https://sepolia-rollup.arbitrum.io/rpc", {
-      timeout: 30_000, // 30 second timeout
-      retryCount: 3,
-      retryDelay: 1000,
+      timeout: 60_000, // 60 second timeout to prevent abort errors
+      retryCount: 2, // Fewer retries to avoid cascading timeouts
+      retryDelay: 2000,
     }),
     [anvil.id]: http("http://localhost:8545", {
       timeout: 10_000,

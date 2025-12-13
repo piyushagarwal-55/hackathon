@@ -38,16 +38,17 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
   });
 
   // Check if user already voted - with polling enabled
+  const isZeroAddress = pollAddress === '0x0000000000000000000000000000000000000000';
   const { data: existingVote, refetch: refetchVote, queryKey: voteQueryKey } = useReadContract({
     address: pollAddress,
     abi: POLL_ABI,
     functionName: 'votes',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && isConnected,
-      refetchInterval: 2000, // Poll every 2 seconds
-      staleTime: 0, // Always stale
-      gcTime: 0, // Don't cache
+      enabled: !!address && isConnected && !isZeroAddress,
+      refetchInterval: 5000, // Reduced frequency
+      staleTime: 2000,
+      gcTime: 10000,
     },
   });
 

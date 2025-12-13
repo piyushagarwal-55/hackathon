@@ -28,7 +28,8 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
     functionName: "getRecentPolls",
     args: [10n],
     query: {
-      refetchInterval: 5000, // Refetch every 5 seconds
+      refetchInterval: 10000, // Reduced to every 10 seconds to prevent timeouts
+      staleTime: 5000,
     },
   });
 

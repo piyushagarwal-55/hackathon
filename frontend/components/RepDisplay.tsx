@@ -15,6 +15,8 @@ export function RepDisplay() {
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,
+      refetchInterval: 10000, // Refresh reputation every 10 seconds
+      staleTime: 5000,
     },
   });
 
