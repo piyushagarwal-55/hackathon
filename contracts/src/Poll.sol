@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./ReputationRegistry.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Poll
@@ -19,6 +20,7 @@ contract Poll {
     // ============ State Variables ============
     
     ReputationRegistry public immutable repRegistry;
+    IERC20 public immutable bettingToken;
     
     string public question;
     string[] public options;
@@ -26,10 +28,15 @@ contract Poll {
     uint256 public immutable maxWeightCap;  // Maximum vote weight as multiple of average
     
     uint256 public constant MAX_CREDITS_PER_USER = 100;  // Fixed budget per user
+    uint256 public constant CREDIT_PRICE = 1e18; // 1 token = 1 credit
     
     bool public isActive;
     uint256 public totalVoters;
     uint256 public totalWeightedVotes;
+    uint256 public totalBetAmount; // Total tokens bet on this poll
+    
+    // Track individual user bets for winner payouts
+    mapping(address => uint256) public userBets;
     
     // option => weighted votes
     mapping(uint256 => uint256) public results;
@@ -57,12 +64,14 @@ contract Poll {
     
     constructor(
         address _repRegistry,
+        address _bettingToken,
         string memory _question,
         string[] memory _options,
         uint256 _duration,
         uint256 _maxWeightCap
     ) {
         repRegistry = ReputationRegistry(_repRegistry);
+        bettingToken = IERC20(_bettingToken);
         question = _question;
         options = _options;
         endTime = block.timestamp + _duration;
