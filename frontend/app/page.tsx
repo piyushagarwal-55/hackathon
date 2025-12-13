@@ -8,7 +8,6 @@ import { PollList } from "@/components/PollList";
 import { ShareModal } from "@/components/ShareModal";
 import { ReputationLeaderboard } from "@/components/ReputationLeaderboard";
 import { VotingHistory } from "@/components/VotingHistory";
-import { StatsDashboard } from "@/components/StatsDashboard";
 import { useReadContract } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { useState } from "react";
@@ -83,9 +82,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Stats Dashboard - Bento Grid */}
-        <StatsDashboard />
-
         {/* User Reputation Card */}
         <div className="mb-12">
           <RepDisplay />
@@ -140,22 +136,16 @@ export default function Home() {
             </div>
 
             {/* Vote and Results Grid */}
-            {selectedPoll || DEMO_POLL_ADDRESS !== "0x..." ? (
+            {selectedPoll ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <VoteCard
-                  pollAddress={
-                    (selectedPoll?.address ||
-                      DEMO_POLL_ADDRESS) as `0x${string}`
-                  }
-                  options={selectedPoll?.options || demoOptions}
+                  pollAddress={selectedPoll.address as `0x${string}`}
+                  options={selectedPoll.options}
                   onVoteSuccess={handleVoteSuccess}
                 />
                 <ResultsChart
-                  pollAddress={
-                    (selectedPoll?.address ||
-                      DEMO_POLL_ADDRESS) as `0x${string}`
-                  }
-                  options={selectedPoll?.options || demoOptions}
+                  pollAddress={selectedPoll.address as `0x${string}`}
+                  options={selectedPoll.options}
                 />
               </div>
             ) : (
