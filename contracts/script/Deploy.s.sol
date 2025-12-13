@@ -25,12 +25,20 @@ contract DeployScript is Script {
         PollFactory factory = new PollFactory(address(repRegistry));
         console.log("PollFactory deployed at:", address(factory));
         
-        // 3. Authorize factory to update reputation
-        repRegistry.addAuthorized(address(factory));
-        console.log("Factory authorized to update reputation");
+        // 3. Set factory in ReputationRegistry (allows factory to authorize polls)
+        repRegistry.setFactory(address(factory));
+        console.log("Factory set and authorized in ReputationRegistry");
         
         // 4. Bootstrap some initial reputation for demo accounts (optional)
-        // This can be done later through the frontend or admin interface
+        address deployer = msg.sender;
+        address[] memory users = new address[](1);
+        uint256[] memory reps = new uint256[](1);
+        
+        users[0] = deployer;
+        reps[0] = 1000; // Give deployer expert reputation
+        
+        repRegistry.bootstrapReputation(users, reps);
+        console.log("Bootstrapped reputation for deployer");
         
         // 5. Create a demo poll
         string[] memory options = new string[](3);
@@ -44,9 +52,6 @@ contract DeployScript is Script {
             7 days,
             10  // 10x max weight cap
         );
-        
-        // Authorize the demo poll
-        repRegistry.addAuthorized(demoPoll);
         
         console.log("Demo Poll deployed at:", demoPoll);
         

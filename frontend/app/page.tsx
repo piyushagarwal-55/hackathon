@@ -14,9 +14,10 @@ import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { useState } from "react";
 import { ArrowRight, Shield, Calculator, Gavel } from "lucide-react";
 
-// Demo poll address - update after deployment
+// Demo poll address - Create your first poll using the "Create Poll" button!
+// Once created, you can paste the address here or select from PollList
 const DEMO_POLL_ADDRESS =
-  "0xCafac3dD18aC6c6e92c921884f9E4176737C052c" as `0x${string}`;
+  "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
 export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
