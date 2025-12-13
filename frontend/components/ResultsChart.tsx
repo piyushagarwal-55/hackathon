@@ -21,27 +21,6 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
   const isZeroAddress =
     pollAddress === "0x0000000000000000000000000000000000000000";
 
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "ResultsChart.tsx:17",
-        message: "ResultsChart mounted",
-        data: {
-          pollAddress,
-          isZeroAddress,
-        },
-        timestamp: Date.now(),
-        sessionId: "debug-session",
-        hypothesisId: "B",
-        runId: "post-fix",
-      }),
-    }).catch(() => {});
-  }, [pollAddress, isZeroAddress]);
-  // #endregion
-
   // Fetch current results with polling enabled - ONLY if valid address
   const {
     data: results,
@@ -64,42 +43,6 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
     },
   });
 
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "ResultsChart.tsx:34",
-        message: "Results query state change",
-        data: {
-          pollAddress,
-          hasResults: !!results,
-          resultsError: resultsError?.message || null,
-          resultsStatus,
-          isLoading,
-          isFetching,
-          isRefetching,
-          isZeroAddress,
-        },
-        timestamp: Date.now(),
-        sessionId: "debug-session",
-        hypothesisId: "C",
-        runId: "post-fix",
-      }),
-    }).catch(() => {});
-  }, [
-    results,
-    resultsError,
-    resultsStatus,
-    isLoading,
-    isFetching,
-    pollAddress,
-    isRefetching,
-    isZeroAddress,
-  ]);
-  // #endregion
-
   const {
     data: totalVoters,
     refetch: refetchVoters,
@@ -116,29 +59,6 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
       gcTime: 5000,
     },
   });
-
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: "ResultsChart.tsx:51",
-        message: "Total voters query state",
-        data: {
-          pollAddress,
-          hasTotalVoters: !!totalVoters,
-          votersError: votersError?.message || null,
-          isZeroAddress,
-        },
-        timestamp: Date.now(),
-        sessionId: "debug-session",
-        hypothesisId: "C",
-        runId: "post-fix",
-      }),
-    }).catch(() => {});
-  }, [totalVoters, votersError, pollAddress, isZeroAddress]);
-  // #endregion
 
   // Debug logging
   useEffect(() => {
@@ -173,23 +93,6 @@ export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
     enabled: !isZeroAddress,
     onLogs(logs) {
       console.log("🎯 VoteCast Event Detected!", logs);
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "ResultsChart.tsx:73",
-            message: "VoteCast event received",
-            data: { pollAddress, logsCount: logs.length },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            hypothesisId: "E",
-          }),
-        }
-      ).catch(() => {});
-      // #endregion
 
       // Invalidate and refetch queries immediately
       queryClient.invalidateQueries({ queryKey: resultsQueryKey });

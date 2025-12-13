@@ -33,11 +33,6 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
     },
   });
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'PollList.tsx:36',message:'PollList query state',data:{factoryAddress:POLL_FACTORY_ADDRESS,hasPolls:!!recentPolls,pollCount:recentPolls?.length||0,isLoading,isError,errorMsg:error?.message||null,status},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D',runId:'post-fix'})}).catch(()=>{});
-  }, [recentPolls, isLoading, isError, error, status]);
-  // #endregion
 
   // Debug logging
   useEffect(() => {

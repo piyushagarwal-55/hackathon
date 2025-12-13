@@ -12,9 +12,9 @@ export function Sidebar() {
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', href: '/', id: 'dashboard' },
-    { icon: BarChart3, label: 'Active Polls', href: '#polls', id: 'polls' },
-    { icon: Users, label: 'Governance', href: '#governance', id: 'governance' },
-    { icon: BookOpen, label: 'Docs', href: '#docs', id: 'docs' },
+    { icon: BarChart3, label: 'Active Polls', href: '/polls', id: 'polls' },
+    { icon: Users, label: 'Governance', href: '/governance', id: 'governance' },
+    { icon: BookOpen, label: 'Docs', href: '/docs', id: 'docs' },
   ];
 
   const isActive = (id: string) => {

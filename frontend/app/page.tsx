@@ -19,11 +19,6 @@ import { ArrowRight, Shield, Calculator, Gavel } from "lucide-react";
 const DEMO_POLL_ADDRESS =
   "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
-// #region agent log
-if (typeof window !== 'undefined') {
-  fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:20',message:'DEMO_POLL_ADDRESS initialized',data:{address:DEMO_POLL_ADDRESS,isZeroAddress:DEMO_POLL_ADDRESS==='0x0000000000000000000000000000000000000000'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-}
-// #endregion
 
 export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

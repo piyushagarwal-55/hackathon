@@ -20,11 +20,6 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:23',message:'VoteCard mounted',data:{pollAddress,isConnected,hasAddress:!!address,chainId,chainName:chain?.name},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G',runId:'vote-debug'})}).catch(()=>{});
-  }, [pollAddress, isConnected, address, chainId, chain]);
-  // #endregion
 
   // Get user's reputation multiplier
   const { data: multiplier } = useReadContract({
@@ -55,27 +50,7 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
   // Write contract function
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
 
-  // #region agent log
-  useEffect(() => {
-    if (writeError) {
-      fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:54',message:'writeContract error',data:{errorMessage:writeError.message,errorName:writeError.name,pollAddress,userAddress:address},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H',runId:'vote-debug'})}).catch(()=>{});
-      
-      // Show user-friendly error message
-      const errorMsg = writeError.message?.toLowerCase() || '';
-      if (errorMsg.includes('failed to fetch') || errorMsg.includes('fetch')) {
-        toast.error('⚠️ Network Error: RPC endpoint unreachable. Please try again or switch networks.');
-      }
-    }
-  }, [writeError, pollAddress, address]);
-  // #endregion
 
-  // #region agent log
-  useEffect(() => {
-    if (hash) {
-      fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:64',message:'Transaction hash received',data:{hash,pollAddress,userAddress:address},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G',runId:'vote-debug'})}).catch(()=>{});
-    }
-  }, [hash, pollAddress, address]);
-  // #endregion
 
   // Wait for transaction with polling
   const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
@@ -85,13 +60,6 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
     },
   });
 
-  // #region agent log
-  useEffect(() => {
-    if (receiptError) {
-      fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:80',message:'Transaction receipt error',data:{errorMessage:receiptError.message,errorName:receiptError.name,hash},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I',runId:'vote-debug'})}).catch(()=>{});
-    }
-  }, [receiptError, hash]);
-  // #endregion
 
   const hasVoted = existingVote && existingVote[3] > 0n; // Check timestamp
 
@@ -168,9 +136,6 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
 }, [existingVote, hasVoted, isPending, isConfirming, isSuccess, isConnected, address, pollAddress]);
 
   const handleVote = async () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:135',message:'handleVote called',data:{isConnected,hasAddress:!!address,selectedOption,creditsSpent,pollAddress},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'F',runId:'vote-debug'})}).catch(()=>{});
-    // #endregion
 
     // Prevent voting on zero address
     if (pollAddress === '0x0000000000000000000000000000000000000000') {
@@ -196,9 +161,6 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
         expectedWeight: weightedVotes.toFixed(2)
       });
       
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:158',message:'Calling writeContract',data:{pollAddress,selectedOption,creditsSpent,userAddress:address},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G',runId:'vote-debug'})}).catch(()=>{});
-      // #endregion
       
       writeContract({
         address: pollAddress,
@@ -210,9 +172,6 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
       toast.info('Transaction submitted - waiting for confirmation...');
     } catch (error: any) {
       console.error('❌ Vote error:', error);
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/dde02e9d-df2f-4dfa-9c85-6ef3ab021e9a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VoteCard.tsx:172',message:'Vote error caught',data:{errorMessage:error.message,errorCode:error.code,errorName:error.name,fullError:JSON.stringify(error,Object.getOwnPropertyNames(error))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'J',runId:'vote-debug'})}).catch(()=>{});
-      // #endregion
       
       // Provide helpful error messages
       const errorMsg = error.message?.toLowerCase() || '';
