@@ -118,14 +118,14 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between animate-fade-in">
               <div className="flex gap-2 flex-1 max-w-md">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search markets..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search markets..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-10 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                  />
+                />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
@@ -157,8 +157,8 @@ export default function Home() {
                         : 'border-slate-700/60'
                     }`}
                   >
-                    <Filter className="w-4 h-4" />
-                    <span className="text-sm">Filter</span>
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm">Filter</span>
                     {(filterStatus !== 'all' || filterPopularity !== 'all') && (
                       <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
                     )}
@@ -245,7 +245,7 @@ export default function Home() {
                             className="w-full px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/40 rounded text-xs font-medium hover:bg-red-500/30 transition-all"
                           >
                             Clear Filters
-                          </button>
+                </button>
                         )}
                       </div>
                     </div>
@@ -265,7 +265,7 @@ export default function Home() {
                         : 'border-slate-700/60'
                     }`}
                   >
-                    <TrendingUp className="w-4 h-4" />
+                  <TrendingUp className="w-4 h-4" />
                     <span className="text-sm">
                       {sortBy === 'recent' ? 'Recent' : sortBy === 'votes' ? 'Trending' : 'Ending Soon'}
                     </span>
@@ -310,7 +310,7 @@ export default function Home() {
                         }`}
                       >
                         ⏰ Ending Soon
-                      </button>
+                </button>
                     </div>
                   )}
                 </div>
@@ -344,12 +344,12 @@ export default function Home() {
             {/* Selected Poll - Full Width Polymarket Style */}
             {selectedPoll ? (
               <>
-                <PolymarketStyleVote
-                  pollAddress={selectedPoll.address as `0x${string}`}
-                  options={selectedPoll.options}
-                  question={selectedPoll.question || "Market Question"}
-                  onVoteSuccess={handleVoteSuccess}
-                />
+              <PolymarketStyleVote
+                pollAddress={selectedPoll.address as `0x${string}`}
+                options={selectedPoll.options}
+                question={selectedPoll.question || "Market Question"}
+                onVoteSuccess={handleVoteSuccess}
+              />
                 
                 {/* Other Markets Section - Below Current Market */}
                 <div className="mt-12 pt-8 border-t border-slate-800/50">
@@ -391,9 +391,9 @@ export default function Home() {
                 filterPopularity={filterPopularity}
                 sortBy={sortBy}
                 filterCategory={filterCategory}
-              />
+                  />
             )}
-          </div>
+                </div>
 
           {/* Right Column - Leaderboard + Activity (Only show when no poll selected) */}
           {!selectedPoll && (
@@ -409,14 +409,14 @@ export default function Home() {
                   </a>
                 </div>
                 <ReputationLeaderboard compact={true} limit={5} />
-              </div>
+                    </div>
 
               {/* Activity Feed */}
               <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     📜 Recent Activity
-                  </h3>
+                    </h3>
                   <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
                     View All →
                   </a>
@@ -442,9 +442,9 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+          </div>
 
         {/* Info Cards Section */}
         <div className="mt-12">

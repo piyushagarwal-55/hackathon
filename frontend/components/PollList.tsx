@@ -76,7 +76,7 @@ export function PollList({
       console.log("🔄 Refetching polls due to trigger:", refreshTrigger);
       // Add a small delay to allow the transaction to be mined and indexed
       const timer = setTimeout(() => {
-        refetch();
+      refetch();
       }, 1000); // 1 second delay
       return () => clearTimeout(timer);
     }
@@ -363,9 +363,9 @@ function PollCard({
           )}
           <div
             className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-              isSelected
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "text-slate-400 group-hover:text-white group-hover:bg-slate-800/50"
+            isSelected
+              ? "bg-emerald-500/20 text-emerald-400"
+              : "text-slate-400 group-hover:text-white group-hover:bg-slate-800/50"
             }`}
           >
             {isSelected ? "Active" : "View"}

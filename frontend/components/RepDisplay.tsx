@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI } from '@/lib/contracts';
 import { getReputationLevel, formatNumber } from '@/lib/calculations';
@@ -7,6 +8,11 @@ import { Award, TrendingUp } from 'lucide-react';
 
 export function RepDisplay() {
   const { address, isConnected } = useAccount();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: userStats } = useReadContract({
     address: REPUTATION_REGISTRY_ADDRESS,
@@ -14,11 +20,23 @@ export function RepDisplay() {
     functionName: 'getUserStats',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && isConnected,
+      enabled: !!address && isConnected && mounted,
       refetchInterval: 10000, // Refresh reputation every 10 seconds
       staleTime: 5000,
     },
   });
+
+  // Prevent hydration mismatch by showing loading state until mounted
+  if (!mounted) {
+    return (
+      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
+        <div className="animate-pulse">
+          <div className="h-4 bg-slate-700/40 rounded w-3/4 mb-2"></div>
+          <div className="h-8 bg-slate-700/40 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (

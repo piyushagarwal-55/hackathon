@@ -144,7 +144,7 @@ export function CreatePollModal({
           votingMethod, // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
           isVotingMethodLocked, // true=locked, false=voter choice
         ],
-        gas: 1000000n, // 1M gas limit for poll creation (deploys new contract)
+        gas: 5000000n, // 5M gas limit for poll creation (deploys new contract)
       });
 
       toast.success("Creating poll...");
@@ -264,7 +264,7 @@ export function CreatePollModal({
               <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                 ⚙️ Advanced Settings
               </h3>
-
+              
               {/* Duration */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -272,12 +272,12 @@ export function CreatePollModal({
                     Market Duration
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="text-emerald-400 font-semibold">
+                  <span className="text-emerald-400 font-semibold">
                       {duration}{" "}
                       {duration === 1
                         ? durationUnit.slice(0, -1)
                         : durationUnit}
-                    </span>
+                  </span>
                     <select
                       value={durationUnit}
                       onChange={(e) =>
@@ -394,7 +394,7 @@ export function CreatePollModal({
                     Weighted
                   </button>
                 </div>
-
+                
                 {/* Lock Method Option */}
                 <label className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
                   <input
@@ -408,7 +408,7 @@ export function CreatePollModal({
                       Lock Voting Method
                     </span>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      {isVotingMethodLocked
+                      {isVotingMethodLocked 
                         ? "All voters will use the selected method"
                         : "Voters can choose their preferred method"}
                     </p>
@@ -449,7 +449,7 @@ export function CreatePollModal({
                   : "Create Market"}
               </button>
             </div>
-
+            
             {/* Info Note */}
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
               <p className="text-xs text-blue-300">

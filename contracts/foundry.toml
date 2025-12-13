@@ -18,10 +18,12 @@ remappings = [
 # RPC endpoints
 [rpc_endpoints]
 sepolia = "${SEPOLIA_RPC_URL}"
+arbitrum_sepolia = "https://sepolia-rollup.arbitrum.io/rpc"
 
 # Etherscan API key for verification
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
+arbitrum_sepolia = { key = "${ARBISCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api" }
 
 # Test settings
 [profile.default.fuzz]
