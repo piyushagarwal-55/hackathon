@@ -222,3 +222,51 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.8);
 }
+
+/* Mobile Touch Optimizations */
+@media (max-width: 768px) {
+  /* Larger tap targets for mobile */
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button, .clickable {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  /* Smooth scrolling on mobile */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Optimize font sizes for mobile readability */
+  body {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Hide scrollbar on mobile for cleaner look */
+  *::-webkit-scrollbar {
+    width: 4px;
+  }
+}
+
+/* Touch-friendly hover states */
+@media (hover: none) {
+  .hover\:scale-\[1\.01\]:hover {
+    transform: scale(1);
+  }
+  
+  .hover\:bg-slate-800\/70:active {
+    background-color: rgba(30, 41, 59, 0.7);
+  }
+}
+
+/* Prevent zoom on double-tap */
+* {
+  touch-action: manipulation;
+}

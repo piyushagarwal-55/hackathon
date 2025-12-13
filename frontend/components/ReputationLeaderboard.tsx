@@ -8,6 +8,7 @@ import {
 import { getReputationLevel, formatNumber } from "@/lib/calculations";
 import { Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
+import { LeaderboardSkeleton } from "./SkeletonLoader";
 
 interface LeaderboardEntry {
   address: string;
@@ -167,20 +168,7 @@ export function ReputationLeaderboard({ compact = false, limit }: ReputationLead
   }, []);
 
   if (isLoading) {
-    return compact ? (
-      <div className="text-center py-4">
-        <p className="text-slate-400 text-sm">Loading...</p>
-      </div>
-    ) : (
-      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
-        <h3 className="text-2xl font-bold text-white mb-4">
-          🏆 Reputation Leaderboard
-        </h3>
-        <p className="text-slate-400 text-center py-8">
-          Loading leaderboard...
-        </p>
-      </div>
-    );
+    return <LeaderboardSkeleton />;
   }
 
   if (leaderboardData.length === 0) {

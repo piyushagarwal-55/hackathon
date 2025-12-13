@@ -9,6 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { getTimeRemaining } from "@/lib/calculations";
 import { Share2 } from "lucide-react";
+import { PollCardSkeleton } from "./SkeletonLoader";
 
 interface PollListProps {
   onSelectPoll: (pollAddress: string, options: string[], question?: string) => void;
@@ -72,9 +73,10 @@ export function PollList({
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
-        <div className="text-6xl mb-4">⏳</div>
-        <h3 className="text-xl font-bold text-white mb-2">Loading Polls...</h3>
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <PollCardSkeleton key={i} />
+        ))}
       </div>
     );
   }

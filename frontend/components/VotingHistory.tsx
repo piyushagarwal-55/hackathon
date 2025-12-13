@@ -3,6 +3,7 @@
 import { useAccount } from 'wagmi';
 import { formatTimestamp } from '@/lib/calculations';
 import { History } from 'lucide-react';
+import { ActivitySkeleton } from './SkeletonLoader';
 
 interface VotingHistoryProps {
   compact?: boolean;

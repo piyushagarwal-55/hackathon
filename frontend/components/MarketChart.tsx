@@ -140,7 +140,7 @@ export function MarketChart({ results, options, totalVoters }: MarketChartProps)
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Chart Area */}
       <div className="bg-slate-950/60 rounded-lg p-6 border border-slate-800/40" ref={containerRef}>
         {/* Header with Legend and Controls */}
@@ -217,7 +217,7 @@ export function MarketChart({ results, options, totalVoters }: MarketChartProps)
         </div>
 
         {/* Enhanced SVG Line Chart */}
-        <div className="relative w-full overflow-x-auto" style={{ height: '320px' }}>
+        <div className="relative w-full overflow-x-auto" style={{ height: '400px' }}>
           <svg 
             ref={svgRef}
             width="100%" 
@@ -405,7 +405,7 @@ export function MarketChart({ results, options, totalVoters }: MarketChartProps)
         </div>
 
         {/* Enhanced Time labels */}
-        <div className="flex justify-between text-xs text-slate-500 mt-4 px-2">
+        <div className="flex justify-between text-xs text-slate-500 mt-6 px-2">
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             24h ago

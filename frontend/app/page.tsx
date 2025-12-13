@@ -16,6 +16,7 @@ import { TrendingUp, Plus, Search, Filter, BarChart3, Clock, Users } from "lucid
 import { PageHeader } from "@/components/PageHeader";
 import { NetworkHealth } from "@/components/NetworkHealth";
 import { Navigation } from "@/components/Navigation";
+import { OnboardingTooltip } from "@/components/OnboardingTooltip";
 
 // Demo poll address - Create your first poll using the "Create Poll" button!
 // Once created, you can paste the address here or select from PollList
@@ -329,53 +330,55 @@ export default function Home() {
             )}
           </div>
 
-          {/* Right Column - Leaderboard + Activity (40% - 1 col) */}
-          <div className="space-y-6 animate-scale-in" style={{ animationDelay: '0.1s' }}>
-            {/* Compact Leaderboard - Top 5 */}
-            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  🏆 Top Contributors
-                </h3>
-                <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
-                  View All →
-                </a>
+          {/* Right Column - Leaderboard + Activity (Only show when no poll selected) */}
+          {!selectedPoll && (
+            <div className="space-y-6 animate-scale-in" style={{ animationDelay: '0.1s' }}>
+              {/* Compact Leaderboard - Top 5 */}
+              <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    🏆 Top Contributors
+                  </h3>
+                  <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                    View All →
+                  </a>
+                </div>
+                <ReputationLeaderboard compact={true} limit={5} />
               </div>
-              <ReputationLeaderboard compact={true} limit={5} />
-            </div>
 
-            {/* Activity Feed */}
-            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  📜 Recent Activity
-                </h3>
-                <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
-                  View All →
-                </a>
+              {/* Activity Feed */}
+              <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    📜 Recent Activity
+                  </h3>
+                  <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                    View All →
+                  </a>
+                </div>
+                <VotingHistory compact={true} limit={5} />
               </div>
-              <VotingHistory compact={true} limit={5} />
-            </div>
 
-            {/* Quick Stats */}
-            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
-              <h3 className="text-lg font-bold text-white mb-4">Platform Stats</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">Total Markets</span>
-                  <span className="text-white font-bold">{pollCount?.toString() ?? "0"}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">24h Volume</span>
-                  <span className="text-emerald-400 font-bold">1,247</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-sm">Active Users</span>
-                  <span className="text-amber-400 font-bold">328</span>
+              {/* Quick Stats */}
+              <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+                <h3 className="text-lg font-bold text-white mb-4">Platform Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-sm">Total Markets</span>
+                    <span className="text-white font-bold">{pollCount?.toString() ?? "0"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-sm">24h Volume</span>
+                    <span className="text-emerald-400 font-bold">1,247</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-sm">Active Users</span>
+                    <span className="text-amber-400 font-bold">328</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Info Cards Section */}
@@ -458,6 +461,9 @@ export default function Home() {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handlePollCreated}
       />
+
+      {/* Onboarding Tooltip */}
+      <OnboardingTooltip />
     </div>
   );
 }
