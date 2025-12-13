@@ -1,21 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI, POLL_ABI } from '@/lib/contracts';
 import { calculateVoteWeight } from '@/lib/calculations';
 import { toast } from 'sonner';
 import { CheckCircle2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface VoteCardProps {
   pollAddress: `0x${string}`;
   options: string[];
+  onVoteSuccess?: () => void;
 }
 
-export function VoteCard({ pollAddress, options }: VoteCardProps) {
+export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps) {
   const { address, isConnected } = useAccount();
   const [creditsSpent, setCreditsSpent] = useState(9);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   // Get user's reputation multiplier
   const { data: multiplier } = useReadContract({
@@ -28,26 +31,104 @@ export function VoteCard({ pollAddress, options }: VoteCardProps) {
     },
   });
 
-  // Check if user already voted
-  const { data: existingVote } = useReadContract({
+  // Check if user already voted - with polling enabled
+  const { data: existingVote, refetch: refetchVote, queryKey: voteQueryKey } = useReadContract({
     address: pollAddress,
     abi: POLL_ABI,
     functionName: 'votes',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,
+      refetchInterval: 2000, // Poll every 2 seconds
+      staleTime: 0, // Always stale
+      gcTime: 0, // Don't cache
     },
   });
 
   // Write contract function
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
 
-  // Wait for transaction
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  // Wait for transaction with polling
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
+    query: {
+      enabled: !!hash,
+    },
   });
 
   const hasVoted = existingVote && existingVote[3] > 0n; // Check timestamp
+
+  // Log transaction state changes
+  useEffect(() => {
+    if (hash) {
+      console.log('🔄 Transaction submitted:', hash);
+    }
+  }, [hash]);
+
+  useEffect(() => {
+    if (isConfirming) {
+      console.log('⏳ Waiting for transaction confirmation...', hash);
+    }
+  }, [isConfirming, hash]);
+
+  useEffect(() => {
+    if (isSuccess && hash) {
+      console.log('✅ Vote Transaction Confirmed!', {
+        hash,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Wait a bit for the blockchain state to settle, then invalidate
+      setTimeout(() => {
+        console.log('🔄 Invalidating queries for poll:', pollAddress);
+        
+        // Invalidate ALL queries for this poll to force fresh data
+        queryClient.invalidateQueries({ 
+          predicate: (query) => {
+            // Invalidate any query that involves this poll address
+            return JSON.stringify(query.queryKey).includes(pollAddress.toLowerCase());
+          }
+      });
+      
+      // Also manually refetch vote data
+      setTimeout(() => {
+        console.log('🔄 Refetching vote data...');
+        refetchVote();
+      }, 500);
+      
+      // Call the success callback if provided (to trigger ResultsChart refetch)
+      if (onVoteSuccess) {
+        console.log('📢 Calling onVoteSuccess callback...');
+        setTimeout(() => {
+          onVoteSuccess();
+        }, 1000);
+      }
+      
+      // Show success toast
+      toast.success('✅ Vote successfully recorded on-chain!');
+      }, 2000);
+    }
+  }, [isSuccess, refetchVote, onVoteSuccess, hash, queryClient, pollAddress]);
+
+  // Debug logging for vote state
+  useEffect(() => {
+    if (isConnected && address) {
+      console.log('🗳️ VoteCard State:', {
+        pollAddress,
+        userAddress: address,
+        hasVoted,
+        existingVote: existingVote ? {
+          option: existingVote[0].toString(),
+          creditsSpent: existingVote[1].toString(),
+          weightedVotes: Number(existingVote[2]).toFixed(2),
+          timestamp: new Date(Number(existingVote[3]) * 1000).toLocaleString()
+        } : 'No vote yet',
+        isPending,
+        isConfirming,
+        isSuccess
+      });
+    }
+}, [existingVote, hasVoted, isPending, isConfirming, isSuccess, isConnected, address, pollAddress]);
 
   const handleVote = async () => {
     if (!isConnected) {
@@ -61,13 +142,23 @@ export function VoteCard({ pollAddress, options }: VoteCardProps) {
     }
 
     try {
+      console.log('📝 Submitting vote:', {
+        poll: pollAddress,
+        option: selectedOption,
+        credits: creditsSpent,
+        expectedWeight: weightedVotes.toFixed(2)
+      });
+      
       writeContract({
         address: pollAddress,
         abi: POLL_ABI,
         functionName: 'vote',
         args: [BigInt(selectedOption), BigInt(creditsSpent)],
       });
+      
+      toast.info('Transaction submitted - waiting for confirmation...');
     } catch (error: any) {
+      console.error('❌ Vote error:', error);
       toast.error(error.message || 'Failed to cast vote');
     }
   };
@@ -93,7 +184,7 @@ export function VoteCard({ pollAddress, options }: VoteCardProps) {
           </p>
           <div className="bg-slate-800/40 rounded-lg p-4 mt-4 border border-slate-700/50">
             <p className="text-slate-500 text-xs mb-1">Vote Weight</p>
-            <p className="text-3xl font-bold text-emerald-400">{(Number(existingVote[2]) / 1e18).toFixed(2)}</p>
+            <p className="text-3xl font-bold text-emerald-400">{Number(existingVote[2]).toFixed(2)}</p>
           </div>
         </div>
       </div>

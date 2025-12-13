@@ -5,6 +5,7 @@ import { POLL_ABI } from '@/lib/contracts';
 import { formatNumber } from '@/lib/calculations';
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ResultsChartProps {
   pollAddress: `0x${string}`;
@@ -13,29 +14,67 @@ interface ResultsChartProps {
 
 export function ResultsChart({ pollAddress, options }: ResultsChartProps) {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
+  const queryClient = useQueryClient();
 
-  // Fetch current results
-  const { data: results, refetch } = useReadContract({
+  // Fetch current results with polling enabled
+  const { data: results, refetch: refetchResults, isLoading, isFetching, isRefetching, queryKey: resultsQueryKey } = useReadContract({
     address: pollAddress,
     abi: POLL_ABI,
     functionName: 'getResults',
+    query: {
+      refetchInterval: 2000, // Refetch every 2 seconds
+      staleTime: 0, // Always consider stale to force refetch
+      gcTime: 0, // Don't cache
+    },
   });
 
-  const { data: totalVoters } = useReadContract({
+  const { data: totalVoters, refetch: refetchVoters, queryKey: votersQueryKey } = useReadContract({
     address: pollAddress,
     abi: POLL_ABI,
     functionName: 'totalVoters',
+    query: {
+      refetchInterval: 2000, // Refetch every 2 seconds
+      staleTime: 0,
+      gcTime: 0,
+    },
   });
 
-  // Listen for new votes
+  // Debug logging
+  useEffect(() => {
+    console.log('📊 ResultsChart Update:', {
+      pollAddress,
+      results: results?.map(r => r.toString()),
+      totalVoters: totalVoters?.toString(),
+      isLoading,
+      isFetching,
+      isRefetching,
+      refreshKey,
+      lastUpdateTime: lastUpdateTime ? new Date(lastUpdateTime).toLocaleTimeString() : 'Never'
+    });
+  }, [results, totalVoters, refreshKey, isLoading, isFetching, isRefetching, lastUpdateTime, pollAddress]);
+
+  // Listen for new votes with proper event handling
   useWatchContractEvent({
     address: pollAddress,
     abi: POLL_ABI,
     eventName: 'VoteCast',
-    onLogs() {
-      refetch();
+    onLogs(logs) {
+      console.log('🎯 VoteCast Event Detected!', logs);
+      
+      // Invalidate and refetch queries immediately
+      queryClient.invalidateQueries({ queryKey: resultsQueryKey });
+      queryClient.invalidateQueries({ queryKey: votersQueryKey });
+      
+      // Also manually refetch
+      refetchResults();
+      refetchVoters();
+      
+      setLastUpdateTime(Date.now());
       setRefreshKey((prev) => prev + 1);
     },
+    poll: true,
+    pollInterval: 1000,
   });
 
   const totalVotes = results

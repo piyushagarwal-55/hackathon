@@ -1,9 +1,19 @@
-# Start Anvil in background
+# Kill any existing Anvil processes
+Write-Host "Cleaning up existing processes..." -ForegroundColor Yellow
+try {
+    wsl bash -c "sudo pkill -9 anvil 2>/dev/null || true"
+    Start-Sleep -Seconds 1
+} catch {}
+
+# Start Anvil in background with CORS and auto-mining
 Write-Host "Starting Anvil blockchain..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "wsl bash -c 'cd /mnt/c/Users/LENOVO/Desktop/mcz/contracts && ~/.foundry/bin/anvil --host 0.0.0.0 --no-cors'"
+Write-Host "  - CORS enabled for frontend" -ForegroundColor Cyan
+Write-Host "  - Auto-mining every 1 second" -ForegroundColor Cyan
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "wsl bash -c 'cd /mnt/c/Users/LENOVO/Desktop/mcz/contracts && ~/.foundry/bin/anvil --host 0.0.0.0 --block-time 1'"
 
 # Wait for Anvil to start
-Start-Sleep -Seconds 5
+Write-Host "Waiting for Anvil to start..." -ForegroundColor Yellow
+Start-Sleep -Seconds 7
 
 # Deploy contracts
 Write-Host "Deploying contracts..." -ForegroundColor Green

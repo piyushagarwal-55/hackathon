@@ -5,6 +5,7 @@ import { VoteCard } from "@/components/VoteCard";
 import { ResultsChart } from "@/components/ResultsChart";
 import { CreatePollModal } from "@/components/CreatePollModal";
 import { PollList } from "@/components/PollList";
+import { ShareModal } from "@/components/ShareModal";
 import { ReputationLeaderboard } from "@/components/ReputationLeaderboard";
 import { VotingHistory } from "@/components/VotingHistory";
 import { StatsDashboard } from "@/components/StatsDashboard";
@@ -19,6 +20,8 @@ const DEMO_POLL_ADDRESS =
 
 export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareData, setShareData] = useState<{ address: string; question: string } | null>(null);
   const [selectedPoll, setSelectedPoll] = useState<{
     address: string;
     options: string[];
@@ -30,6 +33,16 @@ export default function Home() {
 
   const handlePollCreated = () => {
     setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleVoteSuccess = () => {
+    // Trigger results chart refresh
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleShare = (address: string, question: string) => {
+    setShareData({ address, question });
+    setIsShareOpen(true);
   };
 
   const demoOptions = ["Security Audit", "Mobile App Development", "UX Polish"];
@@ -120,6 +133,7 @@ export default function Home() {
                   setSelectedPoll({ address, options })
                 }
                 refreshTrigger={refreshTrigger}
+                onShare={handleShare}
               />
             </div>
 
@@ -132,6 +146,7 @@ export default function Home() {
                       DEMO_POLL_ADDRESS) as `0x${string}`
                   }
                   options={selectedPoll?.options || demoOptions}
+                  onVoteSuccess={handleVoteSuccess}
                 />
                 <ResultsChart
                   pollAddress={
@@ -165,6 +180,16 @@ export default function Home() {
         {activeTab === "leaderboard" && <ReputationLeaderboard />}
 
         {activeTab === "history" && <VotingHistory />}
+
+        {/* Share Modal */}
+        {shareData && (
+          <ShareModal
+            isOpen={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            pollAddress={shareData.address}
+            pollQuestion={shareData.question}
+          />
+        )}
 
         {/* How It Works - Circuit Board Style */}
         <div className="mt-16 mb-12">

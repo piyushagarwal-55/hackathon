@@ -5,9 +5,9 @@
 
 // Deployed contract addresses (Local Anvil)
 export const REPUTATION_REGISTRY_ADDRESS =
-  "0x5FbDB2315678afecb367f032d93F642f64180aa3" as `0x${string}`;
+  "0x59b670e9fA9D0A427751Af201D676719a970857b" as `0x${string}`;
 export const POLL_FACTORY_ADDRESS =
-  "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" as `0x${string}`;
+  "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1" as `0x${string}`;
 
 // ABIs - Essential functions only
 export const REPUTATION_REGISTRY_ABI = [

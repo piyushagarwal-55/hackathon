@@ -8,13 +8,15 @@ import {
 } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 import { getTimeRemaining } from "@/lib/calculations";
+import { Share2 } from "lucide-react";
 
 interface PollListProps {
   onSelectPoll: (pollAddress: string, options: string[]) => void;
   refreshTrigger?: number; // Add this to force refresh from parent
+  onShare?: (pollAddress: string, pollQuestion: string) => void; // Add share callback
 }
 
-export function PollList({ onSelectPoll, refreshTrigger }: PollListProps) {
+export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProps) {
   const [selectedPollIndex, setSelectedPollIndex] = useState<number | null>(
     null
   );
@@ -92,6 +94,7 @@ export function PollList({ onSelectPoll, refreshTrigger }: PollListProps) {
               setSelectedPollIndex(index);
               onSelectPoll(pollAddress, options);
             }}
+            onShare={onShare}
           />
         ))}
       </div>
@@ -104,9 +107,10 @@ interface PollCardProps {
   index: number;
   isSelected: boolean;
   onSelect: (options: string[]) => void;
+  onShare?: (pollAddress: string, pollQuestion: string) => void;
 }
 
-function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
+function PollCard({ pollAddress, index, isSelected, onSelect, onShare }: PollCardProps) {
   // Fetch poll data directly from the Poll contract
   const { data: question } = useReadContract({
     address: pollAddress as `0x${string}`,
@@ -142,6 +146,13 @@ function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
 
   const timeRemaining = endTime ? getTimeRemaining(endTime) : "Unknown";
   const isEnded = timeRemaining === "Ended";
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering poll selection
+    if (onShare && question) {
+      onShare(pollAddress, question as string);
+    }
+  };
 
   return (
     <div
@@ -188,9 +199,20 @@ function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
             </span>
           </div>
         </div>
-        <button className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">
-          {isSelected ? "Selected ✓" : "View →"}
-        </button>
+        <div className="flex items-center gap-2">
+          {onShare && (
+            <button
+              onClick={handleShare}
+              className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700/50 rounded-lg"
+              title="Share poll"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+          )}
+          <button className="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">
+            {isSelected ? "Selected ✓" : "View →"}
+          </button>
+        </div>
       </div>
     </div>
   );

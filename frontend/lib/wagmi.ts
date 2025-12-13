@@ -14,10 +14,10 @@ const anvil = {
   },
   rpcUrls: {
     default: {
-      http: ["http://localhost:3000/api/rpc"], // Use Next.js proxy
+      http: ["http://localhost:8545"], // Direct connection (Anvil has CORS enabled)
     },
     public: {
-      http: ["http://localhost:3000/api/rpc"], // Use Next.js proxy
+      http: ["http://localhost:8545"], // Direct connection
     },
   },
 } as const;
@@ -29,7 +29,7 @@ export const config = createConfig({
     injected(), // MetaMask, Coinbase Wallet, etc.
   ],
   transports: {
-    [anvil.id]: http("http://localhost:3000/api/rpc"), // Use Next.js proxy
+    [anvil.id]: http("http://localhost:8545"), // Direct connection to Anvil
     [sepolia.id]: http(), // Uses public RPC
     [mainnet.id]: http(),
     [polygon.id]: http(),
