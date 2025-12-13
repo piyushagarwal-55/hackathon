@@ -11,7 +11,7 @@ import { getTimeRemaining } from "@/lib/calculations";
 import { Share2 } from "lucide-react";
 
 interface PollListProps {
-  onSelectPoll: (pollAddress: string, options: string[]) => void;
+  onSelectPoll: (pollAddress: string, options: string[], question?: string) => void;
   refreshTrigger?: number; // Add this to force refresh from parent
   onShare?: (pollAddress: string, pollQuestion: string) => void; // Add share callback
 }
@@ -92,9 +92,9 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
           pollAddress={pollAddress}
           index={index}
           isSelected={selectedPollIndex === index}
-          onSelect={(options) => {
+          onSelect={(options, question) => {
             setSelectedPollIndex(index);
-            onSelectPoll(pollAddress, options);
+            onSelectPoll(pollAddress, options, question);
           }}
           onShare={onShare}
         />
@@ -107,7 +107,7 @@ interface PollCardProps {
   pollAddress: string;
   index: number;
   isSelected: boolean;
-  onSelect: (options: string[]) => void;
+  onSelect: (options: string[], question: string) => void;
   onShare?: (pollAddress: string, pollQuestion: string) => void;
 }
 
@@ -157,7 +157,7 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare }: PollCar
 
   return (
     <div
-      onClick={() => onSelect(options as string[])}
+      onClick={() => onSelect(options as string[], question as string)}
       className={`group relative bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border transition-all cursor-pointer overflow-hidden ${
         isSelected
           ? "border-emerald-500/60 shadow-lg shadow-emerald-500/10"

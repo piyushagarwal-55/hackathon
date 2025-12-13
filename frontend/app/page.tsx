@@ -3,6 +3,7 @@
 import { RepDisplay } from "@/components/RepDisplay";
 import { VoteCard } from "@/components/VoteCard";
 import { ResultsChart } from "@/components/ResultsChart";
+import { PolymarketStyleVote } from "@/components/PolymarketStyleVote";
 import { CreatePollModal } from "@/components/CreatePollModal";
 import { PollList } from "@/components/PollList";
 import { ShareModal } from "@/components/ShareModal";
@@ -11,12 +12,10 @@ import { VotingHistory } from "@/components/VotingHistory";
 import { useReadContract, useAccount } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { useState } from "react";
-import { TrendingUp, Plus, Search, Filter, BarChart3, Clock, Users, BookOpen, Home } from "lucide-react";
+import { TrendingUp, Plus, Search, Filter, BarChart3, Clock, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { NetworkHealth } from "@/components/NetworkHealth";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Navigation } from "@/components/Navigation";
 
 // Demo poll address - Create your first poll using the "Create Poll" button!
 // Once created, you can paste the address here or select from PollList
@@ -26,13 +25,13 @@ const DEMO_POLL_ADDRESS =
 
 export default function Home() {
   const { address: userAddress } = useAccount();
-  const pathname = usePathname();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [shareData, setShareData] = useState<{ address: string; question: string } | null>(null);
   const [selectedPoll, setSelectedPoll] = useState<{
     address: string;
     options: string[];
+    question?: string;
   } | null>(null);
   const [activeView, setActiveView] = useState<
     "markets" | "leaderboard" | "history"
@@ -65,93 +64,46 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {/* Modern Top Navigation */}
-      <nav className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/60">
+      {/* Navigation */}
+      <Navigation onCreateClick={() => setIsCreateModalOpen(true)} showCreateButton={true} />
+      
+      {/* Sub Navigation for Dashboard Views */}
+      <div className="bg-slate-900/40 border-b border-slate-800/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Brand */}
-            <div className="flex items-center gap-8">
-              <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-bold text-slate-900">
-                  R
-                </div>
-                <span className="text-xl font-bold text-white">RepVote</span>
-              </Link>
-              
-              {/* Navigation Tabs */}
-              <div className="hidden md:flex items-center gap-1">
-                <button
-                  onClick={() => setActiveView("markets")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeView === "markets"
-                      ? "bg-emerald-500/15 text-emerald-400"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                  }`}
-                >
-                  Markets
-                </button>
-                <button
-                  onClick={() => setActiveView("leaderboard")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeView === "leaderboard"
-                      ? "bg-emerald-500/15 text-emerald-400"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                  }`}
-                >
-                  Leaderboard
-                </button>
-                <button
-                  onClick={() => setActiveView("history")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeView === "history"
-                      ? "bg-emerald-500/15 text-emerald-400"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                  }`}
-                >
-                  Activity
-                </button>
-                <Link
-                  href="/polls"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all"
-                >
-                  Polls
-                </Link>
-                <Link
-                  href="/governance"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all"
-                >
-                  Governance
-                </Link>
-                <Link
-                  href="/docs"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all"
-                >
-                  Docs
-                </Link>
-              </div>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-2 text-sm px-3 py-1.5 bg-slate-800/40 rounded-lg border border-slate-700/40">
-                <span className="text-slate-400">Markets:</span>
-                <span className="font-bold text-white">{pollCount?.toString() ?? "—"}</span>
-              </div>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-lg text-white font-semibold transition-all hover:shadow-lg hover:shadow-emerald-500/30"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Create</span>
-              </button>
-              {/* Wallet Connection */}
-              <div className="flex items-center">
-                <ConnectButton showBalance={false} chainStatus="icon" accountStatus="address" />
-              </div>
-            </div>
+          <div className="flex items-center gap-1 py-3">
+            <button
+              onClick={() => setActiveView("markets")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeView === "markets"
+                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              📊 Markets
+            </button>
+            <button
+              onClick={() => setActiveView("leaderboard")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeView === "leaderboard"
+                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              🏆 Leaderboard
+            </button>
+            <button
+              onClick={() => setActiveView("history")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeView === "history"
+                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              📜 Activity
+            </button>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -190,44 +142,40 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Markets Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Market List */}
-              <div className="lg:col-span-2 space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-emerald-400" />
-                    Active Markets
-                  </h2>
-                  <span className="text-sm text-slate-400">
-                    {pollCount?.toString() ?? "0"} markets
-                  </span>
+            {/* Selected Poll - Full Width Polymarket Style */}
+            {selectedPoll ? (
+              <PolymarketStyleVote
+                pollAddress={selectedPoll.address as `0x${string}`}
+                options={selectedPoll.options}
+                question={selectedPoll.question || "Market Question"}
+                onVoteSuccess={handleVoteSuccess}
+              />
+            ) : (
+              /* Markets Grid - When no poll selected */
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Market List */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-emerald-400" />
+                      Active Markets
+                    </h2>
+                    <span className="text-sm text-slate-400">
+                      {pollCount?.toString() ?? "0"} markets
+                    </span>
+                  </div>
+                  
+                  <PollList
+                    onSelectPoll={(address, options, question) =>
+                      setSelectedPoll({ address, options, question })
+                    }
+                    refreshTrigger={refreshTrigger}
+                    onShare={handleShare}
+                  />
                 </div>
-                
-                <PollList
-                  onSelectPoll={(address, options) =>
-                    setSelectedPoll({ address, options })
-                  }
-                  refreshTrigger={refreshTrigger}
-                  onShare={handleShare}
-                />
-              </div>
 
-              {/* Right Column - Selected Poll Details */}
-              <div className="space-y-4">
-                {selectedPoll ? (
-                  <>
-                    <VoteCard
-                      pollAddress={selectedPoll.address as `0x${string}`}
-                      options={selectedPoll.options}
-                      onVoteSuccess={handleVoteSuccess}
-                    />
-                    <ResultsChart
-                      pollAddress={selectedPoll.address as `0x${string}`}
-                      options={selectedPoll.options}
-                    />
-                  </>
-                ) : (
+                {/* Right Column - Placeholder */}
+                <div className="space-y-4">
                   <div className="sticky top-24 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-8 border border-slate-700/50 text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center">
                       <BarChart3 className="w-8 h-8 text-slate-600" />
@@ -239,9 +187,9 @@ export default function Home() {
                       Choose a poll from the list to view details and cast your vote
                     </p>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -307,7 +255,7 @@ export default function Home() {
 
       {/* Compact Footer */}
       <footer className="border-t border-slate-800/50 bg-slate-900/40 backdrop-blur-xl mt-16">
-        <div className="rv-container py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-6 text-sm text-slate-400">
               <a href="/docs" className="hover:text-emerald-400 transition-colors">Docs</a>
