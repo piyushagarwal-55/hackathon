@@ -127,6 +127,7 @@ export function ClaimWinnings({ pollAddress, options }: ClaimWinningsProps) {
         address: pollAddress,
         abi: POLL_ABI,
         functionName: "claimWinnings",
+        gas: 150000n, // Gas limit for claiming winnings
       });
       toast.info("Claim transaction submitted...");
     } catch (error: any) {

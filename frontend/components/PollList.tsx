@@ -10,28 +10,36 @@ import { useState, useEffect } from "react";
 import { getTimeRemaining } from "@/lib/calculations";
 import { Share2 } from "lucide-react";
 import { PollCardSkeleton } from "./SkeletonLoader";
-import { getCategoryFromQuestion, getCategoryById, CategoryId } from "@/lib/categories";
+import {
+  getCategoryFromQuestion,
+  getCategoryById,
+  CategoryId,
+} from "@/lib/categories";
 
 interface PollListProps {
-  onSelectPoll: (pollAddress: string, options: string[], question?: string) => void;
+  onSelectPoll: (
+    pollAddress: string,
+    options: string[],
+    question?: string
+  ) => void;
   refreshTrigger?: number;
   onShare?: (pollAddress: string, pollQuestion: string) => void;
   searchQuery?: string;
-  filterStatus?: 'all' | 'active' | 'ended';
-  filterPopularity?: 'all' | 'popular' | 'new';
-  sortBy?: 'recent' | 'votes' | 'ending';
-  filterCategory?: CategoryId | 'all';
+  filterStatus?: "all" | "active" | "ended";
+  filterPopularity?: "all" | "popular" | "new";
+  sortBy?: "recent" | "votes" | "ending";
+  filterCategory?: CategoryId | "all";
 }
 
-export function PollList({ 
-  onSelectPoll, 
-  refreshTrigger, 
+export function PollList({
+  onSelectPoll,
+  refreshTrigger,
   onShare,
-  searchQuery = '',
-  filterStatus = 'all',
-  filterPopularity = 'all',
-  sortBy = 'recent',
-  filterCategory = 'all'
+  searchQuery = "",
+  filterStatus = "all",
+  filterPopularity = "all",
+  sortBy = "recent",
+  filterCategory = "all",
 }: PollListProps) {
   const [selectedPollIndex, setSelectedPollIndex] = useState<number | null>(
     null
@@ -39,17 +47,23 @@ export function PollList({
   const [filteredPolls, setFilteredPolls] = useState<string[]>([]);
 
   // Fetch recent polls with query configuration
-  const { data: recentPolls, refetch, isLoading, isError, error, status } = useReadContract({
+  const {
+    data: recentPolls,
+    refetch,
+    isLoading,
+    isError,
+    error,
+    status,
+  } = useReadContract({
     address: POLL_FACTORY_ADDRESS,
     abi: POLL_FACTORY_ABI,
     functionName: "getRecentPolls",
     args: [10n],
     query: {
-      refetchInterval: 10000, // Reduced to every 10 seconds to prevent timeouts
-      staleTime: 5000,
+      refetchInterval: 5000, // Check every 5 seconds for new polls
+      staleTime: 0, // Don't cache - always fetch fresh data
     },
   });
-
 
   // Debug logging
   useEffect(() => {
@@ -59,9 +73,17 @@ export function PollList({
   // Refetch when refreshTrigger changes (from parent)
   useEffect(() => {
     if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      console.log("🔄 Refetching polls due to trigger:", refreshTrigger);
       refetch();
     }
   }, [refreshTrigger, refetch]);
+
+  // Also refetch whenever recentPolls data changes
+  useEffect(() => {
+    if (recentPolls) {
+      console.log("📊 Polls updated, count:", recentPolls.length);
+    }
+  }, [recentPolls]);
 
   // Filter and sort polls
   // Note: Category filtering is implemented at the card level via getCategoryFromQuestion
@@ -72,10 +94,17 @@ export function PollList({
       setFilteredPolls([]);
       return;
     }
-    
+
     let polls = [...recentPolls];
     setFilteredPolls(polls);
-  }, [recentPolls, searchQuery, filterStatus, filterPopularity, sortBy, filterCategory]);
+  }, [
+    recentPolls,
+    searchQuery,
+    filterStatus,
+    filterPopularity,
+    sortBy,
+    filterCategory,
+  ]);
 
   if (isLoading) {
     return (
@@ -91,8 +120,12 @@ export function PollList({
     return (
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
         <div className="text-6xl mb-4">❌</div>
-        <h3 className="text-xl font-bold text-white mb-2">Error Loading Polls</h3>
-        <p className="text-slate-400 text-sm">{error?.message || "Unknown error"}</p>
+        <h3 className="text-xl font-bold text-white mb-2">
+          Error Loading Polls
+        </h3>
+        <p className="text-slate-400 text-sm">
+          {error?.message || "Unknown error"}
+        </p>
       </div>
     );
   }
@@ -102,14 +135,34 @@ export function PollList({
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
         <div className="text-6xl mb-4">📋</div>
         <h3 className="text-xl font-bold text-white mb-2">No Polls Yet</h3>
-        <p className="text-slate-400 mb-4">Create the first poll to get started!</p>
+        <p className="text-slate-400 mb-4">
+          Create the first poll to get started!
+        </p>
         <div className="mt-6 p-4 bg-amber-950/30 border border-amber-500/30 rounded-lg">
-          <p className="text-amber-400 text-sm font-semibold mb-2">⚠️ Setup Required</p>
-          <p className="text-slate-300 text-xs mb-3">To create polls, ensure your local blockchain is running:</p>
+          <p className="text-amber-400 text-sm font-semibold mb-2">
+            ⚠️ Setup Required
+          </p>
+          <p className="text-slate-300 text-xs mb-3">
+            To create polls, ensure your local blockchain is running:
+          </p>
           <ol className="text-left text-slate-400 text-xs space-y-1 max-w-md mx-auto">
-            <li>1. Start Anvil: <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">anvil --host 0.0.0.0 --cors-origins "*"</code></li>
-            <li>2. Deploy contracts: <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">forge script script/DeployLocal.s.sol --broadcast --rpc-url http://localhost:8545</code></li>
-            <li>3. Connect MetaMask to Anvil (Chain ID: 31337, RPC: http://localhost:3000/api/rpc)</li>
+            <li>
+              1. Start Anvil:{" "}
+              <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">
+                anvil --host 0.0.0.0 --cors-origins "*"
+              </code>
+            </li>
+            <li>
+              2. Deploy contracts:{" "}
+              <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">
+                forge script script/DeployLocal.s.sol --broadcast --rpc-url
+                http://localhost:8545
+              </code>
+            </li>
+            <li>
+              3. Connect MetaMask to Anvil (Chain ID: 31337, RPC:
+              http://localhost:3000/api/rpc)
+            </li>
           </ol>
         </div>
       </div>
@@ -159,7 +212,15 @@ interface PollCardProps {
   onCategoryClick?: (category: CategoryId) => void;
 }
 
-function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQuery, onCategoryClick }: PollCardProps) {
+function PollCard({
+  pollAddress,
+  index,
+  isSelected,
+  onSelect,
+  onShare,
+  searchQuery,
+  onCategoryClick,
+}: PollCardProps) {
   // Fetch poll data directly from the Poll contract
   const { data: question } = useReadContract({
     address: pollAddress as `0x${string}`,
@@ -195,7 +256,7 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
 
   const timeRemaining = endTime ? getTimeRemaining(endTime) : "Unknown";
   const isEnded = timeRemaining === "Ended";
-  
+
   // Get category from question
   const categoryId = getCategoryFromQuestion(question as string);
   const category = getCategoryById(categoryId);
@@ -206,7 +267,7 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
       onShare(pollAddress, question as string);
     }
   };
-  
+
   const handleCategoryClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering poll selection
     if (onCategoryClick) {
@@ -264,7 +325,9 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
               <div className="w-4 h-4 rounded bg-slate-800/50 flex items-center justify-center">
                 <span className="text-[10px]">👥</span>
               </div>
-              <span className="text-slate-400">{totalVoters?.toString() || "0"}</span>
+              <span className="text-slate-400">
+                {totalVoters?.toString() || "0"}
+              </span>
               <span className="text-slate-600">voters</span>
             </div>
             <div className="w-px h-3 bg-slate-700/50" />
@@ -294,11 +357,13 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
               <Share2 className="w-3.5 h-3.5" />
             </button>
           )}
-          <div className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-            isSelected
-              ? "bg-emerald-500/20 text-emerald-400"
-              : "text-slate-400 group-hover:text-white group-hover:bg-slate-800/50"
-          }`}>
+          <div
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+              isSelected
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "text-slate-400 group-hover:text-white group-hover:bg-slate-800/50"
+            }`}
+          >
             {isSelected ? "Active" : "View"}
           </div>
         </div>
@@ -306,5 +371,3 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQue
     </div>
   );
 }
-
-

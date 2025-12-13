@@ -200,6 +200,7 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
         abi: ERC20_ABI,
         functionName: 'approve',
         args: [pollAddress, tokenAmount],
+        gas: 50000n, // Set gas limit for approval (typically 46k-48k)
       });
       toast.info('Approval transaction submitted...');
     } catch (error: any) {
@@ -245,6 +246,7 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
         abi: POLL_ABI,
         functionName: 'vote',
         args: [BigInt(selectedOption), tokenAmount, votingMethod],
+        gas: 200000n, // Set gas limit to 200k (was ~180k-220k)
       });
       toast.info('Vote transaction submitted...');
     } catch (error: any) {

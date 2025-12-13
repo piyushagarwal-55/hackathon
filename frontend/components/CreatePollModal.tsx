@@ -5,6 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { toast } from "sonner";
 import { Sparkles, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CreatePollModalProps {
   isOpen: boolean;
@@ -28,7 +29,9 @@ export function CreatePollModal({
   const [question, setQuestion] = useState(initialQuestion);
   const [options, setOptions] = useState(initialOptions);
   const [duration, setDuration] = useState(initialDuration);
-  const [durationUnit, setDurationUnit] = useState<'minutes' | 'hours' | 'days'>('minutes');
+  const [durationUnit, setDurationUnit] = useState<
+    "minutes" | "hours" | "days"
+  >("minutes");
   const [maxWeightCap, setMaxWeightCap] = useState(initialMaxWeightCap);
   const [votingMethod, setVotingMethod] = useState<0 | 1 | 2>(0); // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
   const [isVotingMethodLocked, setIsVotingMethodLocked] = useState(false);
@@ -47,10 +50,17 @@ export function CreatePollModal({
     setQuestion(initialQuestion);
     setOptions(initialOptions.length >= 2 ? initialOptions : ["", ""]);
     setDuration(1); // Default to 1 minute for quick testing
-    setDurationUnit('minutes');
+    setDurationUnit("minutes");
     setMaxWeightCap(initialMaxWeightCap);
-  }, [isOpen, initialQuestion, initialOptions, initialDuration, initialMaxWeightCap]);
+  }, [
+    isOpen,
+    initialQuestion,
+    initialOptions,
+    initialDuration,
+    initialMaxWeightCap,
+  ]);
 
+  const queryClient = useQueryClient();
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
@@ -62,23 +72,25 @@ export function CreatePollModal({
       console.log("Poll creation transaction confirmed! Hash:", hash);
       toast.success("Poll created successfully!");
 
-      // Wait a bit for the blockchain to propagate
-      setTimeout(() => {
-        console.log("Calling onSuccess to refresh poll list...");
-        onSuccess(); // Trigger refetch in parent
-        
-        setTimeout(() => {
-          onClose();
+      // Invalidate all queries to force refresh
+      queryClient.invalidateQueries();
 
-          // Reset form
-          setQuestion("");
-          setOptions(["", ""]);
-          setDuration(1);
-          setDurationUnit('minutes');
-          setMaxWeightCap(10);
-          reset();
-        }, 500);
-      }, 3000); // 3 second delay for blockchain propagation
+      // Immediately trigger refresh and close
+      console.log("Poll created! Refreshing list...");
+      onSuccess(); // Trigger refetch in parent
+
+      // Small delay to show success before closing
+      setTimeout(() => {
+        onClose();
+
+        // Reset form
+        setQuestion("");
+        setOptions(["", ""]);
+        setDuration(1);
+        setDurationUnit("minutes");
+        setMaxWeightCap(10);
+        reset();
+      }, 1500); // 1.5 second delay to show success message
     }
   }, [isSuccess, hash, onSuccess, onClose, reset]);
 
@@ -116,10 +128,12 @@ export function CreatePollModal({
 
     try {
       // Calculate duration in seconds based on unit
-      const durationInSeconds = 
-        durationUnit === 'minutes' ? duration * 60 :
-        durationUnit === 'hours' ? duration * 60 * 60 :
-        duration * 24 * 60 * 60; // days
+      const durationInSeconds =
+        durationUnit === "minutes"
+          ? duration * 60
+          : durationUnit === "hours"
+          ? duration * 60 * 60
+          : duration * 24 * 60 * 60; // days
 
       writeContract({
         address: POLL_FACTORY_ADDRESS,
@@ -133,6 +147,7 @@ export function CreatePollModal({
           votingMethod, // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
           isVotingMethodLocked, // true=locked, false=voter choice
         ],
+        gas: 1000000n, // 1M gas limit for poll creation (deploys new contract)
       });
 
       toast.success("Creating poll...");
@@ -191,9 +206,7 @@ export function CreatePollModal({
                 <p className="text-xs text-slate-500">
                   Make it clear and specific
                 </p>
-                <p className="text-xs text-slate-500">
-                  {question.length}/200
-                </p>
+                <p className="text-xs text-slate-500">{question.length}/200</p>
               </div>
             </div>
 
@@ -215,7 +228,13 @@ export function CreatePollModal({
                       type="text"
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
-                      placeholder={index === 0 ? "Yes" : index === 1 ? "No" : `Option ${index + 1}`}
+                      placeholder={
+                        index === 0
+                          ? "Yes"
+                          : index === 1
+                          ? "No"
+                          : `Option ${index + 1}`
+                      }
                       className="flex-1 px-4 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-colors"
                       maxLength={100}
                     />
@@ -248,7 +267,7 @@ export function CreatePollModal({
               <h3 className="text-white font-semibold text-sm flex items-center gap-2">
                 ⚙️ Advanced Settings
               </h3>
-              
+
               {/* Duration */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -257,11 +276,18 @@ export function CreatePollModal({
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-emerald-400 font-semibold">
-                      {duration} {duration === 1 ? durationUnit.slice(0, -1) : durationUnit}
+                      {duration}{" "}
+                      {duration === 1
+                        ? durationUnit.slice(0, -1)
+                        : durationUnit}
                     </span>
                     <select
                       value={durationUnit}
-                      onChange={(e) => setDurationUnit(e.target.value as 'minutes' | 'hours' | 'days')}
+                      onChange={(e) =>
+                        setDurationUnit(
+                          e.target.value as "minutes" | "hours" | "days"
+                        )
+                      }
                       className="px-2 py-1 bg-slate-800/50 border border-slate-700 rounded text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     >
                       <option value="minutes">Minutes</option>
@@ -273,7 +299,13 @@ export function CreatePollModal({
                 <input
                   type="range"
                   min="1"
-                  max={durationUnit === 'minutes' ? 60 : durationUnit === 'hours' ? 24 : 30}
+                  max={
+                    durationUnit === "minutes"
+                      ? 60
+                      : durationUnit === "hours"
+                      ? 24
+                      : 30
+                  }
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
                   className="w-full h-2 bg-slate-700/50 rounded-lg appearance-none cursor-pointer 
@@ -284,7 +316,13 @@ export function CreatePollModal({
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-2">
                   <span>1 {durationUnit.slice(0, -1)}</span>
-                  <span>{durationUnit === 'minutes' ? '60 min' : durationUnit === 'hours' ? '24 hr' : '30 days'}</span>
+                  <span>
+                    {durationUnit === "minutes"
+                      ? "60 min"
+                      : durationUnit === "hours"
+                      ? "24 hr"
+                      : "30 days"}
+                  </span>
                 </div>
               </div>
 
@@ -330,8 +368,8 @@ export function CreatePollModal({
                     onClick={() => setVotingMethod(0)}
                     className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                       votingMethod === 0
-                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                        : 'bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60'
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                        : "bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60"
                     }`}
                   >
                     Quadratic
@@ -341,8 +379,8 @@ export function CreatePollModal({
                     onClick={() => setVotingMethod(1)}
                     className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                       votingMethod === 1
-                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                        : 'bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60'
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                        : "bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60"
                     }`}
                   >
                     Simple
@@ -352,14 +390,14 @@ export function CreatePollModal({
                     onClick={() => setVotingMethod(2)}
                     className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                       votingMethod === 2
-                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                        : 'bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60'
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                        : "bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60"
                     }`}
                   >
                     Weighted
                   </button>
                 </div>
-                
+
                 {/* Lock Method Option */}
                 <label className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
                   <input
@@ -369,18 +407,22 @@ export function CreatePollModal({
                     className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-0 bg-slate-700"
                   />
                   <div className="flex-1">
-                    <span className="text-white text-sm font-medium">Lock Voting Method</span>
+                    <span className="text-white text-sm font-medium">
+                      Lock Voting Method
+                    </span>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      {isVotingMethodLocked 
-                        ? 'All voters will use the selected method'
-                        : 'Voters can choose their preferred method'}
+                      {isVotingMethodLocked
+                        ? "All voters will use the selected method"
+                        : "Voters can choose their preferred method"}
                     </p>
                   </div>
                 </label>
 
                 <p className="text-xs text-slate-400 mt-3">
-                  <strong>Quadratic:</strong> √credits (fairer for smaller bets)<br/>
-                  <strong>Simple:</strong> credits (linear)<br/>
+                  <strong>Quadratic:</strong> √credits (fairer for smaller bets)
+                  <br />
+                  <strong>Simple:</strong> credits (linear)
+                  <br />
                   <strong>Weighted:</strong> credits × 1.5 (amplified)
                 </p>
               </div>
@@ -410,11 +452,12 @@ export function CreatePollModal({
                   : "Create Market"}
               </button>
             </div>
-            
+
             {/* Info Note */}
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
               <p className="text-xs text-blue-300">
-                💡 This will create a smart contract on the blockchain. Transaction fees apply.
+                💡 This will create a smart contract on the blockchain.
+                Transaction fees apply.
               </p>
             </div>
           </form>
@@ -423,5 +466,3 @@ export function CreatePollModal({
     </div>
   );
 }
-
-

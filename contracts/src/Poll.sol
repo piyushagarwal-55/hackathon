@@ -180,8 +180,8 @@ contract Poll {
         totalVoters++;
         totalWeightedVotes += weightedVotes;
         
-        // Award reputation for participating
-        repRegistry.addReputation(msg.sender, 10);
+        // Note: Reputation updates removed to save gas
+        // Reputation is now awarded only when claiming winnings
         
         emit VoteCast(msg.sender, optionId, credits, weightedVotes, methodToUse);
     }
@@ -221,6 +221,9 @@ contract Poll {
         // Transfer winnings
         bool success = bettingToken.transfer(msg.sender, userShare);
         require(success, "Payout transfer failed");
+        
+        // Award reputation for winning (only winners pay gas for reputation update)
+        repRegistry.addReputation(msg.sender, 50); // 50 points for winning vs 10 for voting
         
         emit WinningsClaimed(msg.sender, userShare);
     }
