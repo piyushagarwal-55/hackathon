@@ -141,6 +141,13 @@ export const POLL_ABI = [
   },
   {
     inputs: [],
+    name: "getOptionCount",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "endTime",
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",

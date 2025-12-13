@@ -69,7 +69,7 @@ export function RepDisplay() {
       </div>
 
       {/* Last Vote Time */}
-      {lastVote > 0 && (
+      {lastVote > 0 && typeof window !== 'undefined' && (
         <div className="mt-4 pt-4 border-t border-white/10">
           <p className="text-gray-400 text-xs">
             Last voted:{' '}

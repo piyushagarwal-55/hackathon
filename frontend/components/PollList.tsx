@@ -20,32 +20,53 @@ export function PollList({ onSelectPoll, refreshTrigger }: PollListProps) {
   );
 
   // Fetch recent polls with query configuration
-  const { data: recentPolls, refetch } = useReadContract({
+  const { data: recentPolls, refetch, isLoading, isError, error } = useReadContract({
     address: POLL_FACTORY_ADDRESS,
     abi: POLL_FACTORY_ABI,
     functionName: "getRecentPolls",
     args: [10n],
     query: {
-      refetchInterval: 10000, // Refetch every 10 seconds
-      staleTime: 5000, // Consider data stale after 5 seconds
+      refetchInterval: 5000, // Refetch every 5 seconds
     },
   });
 
+  // Debug logging
+  useEffect(() => {
+    console.log("PollList data state:", {
+      recentPolls,
+      isLoading,
+      isError,
+      error,
+      pollCount: recentPolls?.length
+    });
+  }, [recentPolls, isLoading, isError, error]);
+
   // Refetch when refreshTrigger changes (from parent)
   useEffect(() => {
-    if (refreshTrigger !== undefined) {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      console.log("Refetching polls due to refreshTrigger:", refreshTrigger);
       refetch();
     }
   }, [refreshTrigger, refetch]);
 
-  // Auto-refetch interval
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 10000); // Refresh every 10 seconds
+  if (isLoading) {
+    return (
+      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 text-center">
+        <div className="text-6xl mb-4">⏳</div>
+        <h3 className="text-xl font-bold text-white mb-2">Loading Polls...</h3>
+      </div>
+    );
+  }
 
-    return () => clearInterval(interval);
-  }, [refetch]);
+  if (isError) {
+    return (
+      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 text-center">
+        <div className="text-6xl mb-4">❌</div>
+        <h3 className="text-xl font-bold text-white mb-2">Error Loading Polls</h3>
+        <p className="text-gray-400 text-sm">{error?.message || "Unknown error"}</p>
+      </div>
+    );
+  }
 
   if (!recentPolls || recentPolls.length === 0) {
     return (
@@ -86,34 +107,45 @@ interface PollCardProps {
 }
 
 function PollCard({ pollAddress, index, isSelected, onSelect }: PollCardProps) {
-  const { data: pollInfo } = useReadContract({
-    address: POLL_FACTORY_ADDRESS,
-    abi: POLL_FACTORY_ABI,
-    functionName: "getPollInfo",
-    args: [pollAddress as `0x${string}`],
-    query: {
-      refetchInterval: 10000,
-    },
+  // Fetch poll data directly from the Poll contract
+  const { data: question } = useReadContract({
+    address: pollAddress as `0x${string}`,
+    abi: POLL_ABI,
+    functionName: "question",
+  });
+
+  const { data: options } = useReadContract({
+    address: pollAddress as `0x${string}`,
+    abi: POLL_ABI,
+    functionName: "getOptions",
+  });
+
+  const { data: endTime } = useReadContract({
+    address: pollAddress as `0x${string}`,
+    abi: POLL_ABI,
+    functionName: "endTime",
+  });
+
+  const { data: isActive } = useReadContract({
+    address: pollAddress as `0x${string}`,
+    abi: POLL_ABI,
+    functionName: "isActive",
   });
 
   const { data: totalVoters } = useReadContract({
     address: pollAddress as `0x${string}`,
     abi: POLL_ABI,
     functionName: "totalVoters",
-    query: {
-      refetchInterval: 10000,
-    },
   });
 
-  if (!pollInfo) return null;
+  if (!question || !options) return null;
 
-  const [question, options, endTime, isActive] = pollInfo;
-  const timeRemaining = getTimeRemaining(endTime);
+  const timeRemaining = endTime ? getTimeRemaining(endTime) : "Unknown";
   const isEnded = timeRemaining === "Ended";
 
   return (
     <div
-      onClick={() => onSelect(options)}
+      onClick={() => onSelect(options as string[])}
       className={`bg-white/5 backdrop-blur-lg rounded-xl p-6 border transition-all cursor-pointer ${
         isSelected
           ? "border-indigo-500 shadow-lg shadow-indigo-500/30 scale-[1.02]"

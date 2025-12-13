@@ -157,6 +157,13 @@ contract Poll {
         return options;
     }
     
+    /**
+     * @notice Get the number of options in the poll
+     */
+    function getOptionCount() external view returns (uint256) {
+        return options.length;
+    }
+    
     // ============ Internal Functions ============
     
     /**
