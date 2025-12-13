@@ -355,7 +355,7 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
                 <ShareButton
                   marketQuestion={question}
                   marketAddress={pollAddress}
-                  currentOdds={percentages.length >= 2 ? { yes: percentages[0], no: percentages[1] } : undefined}
+                  currentOdds={optionPercentages.length >= 2 ? { yes: optionPercentages[0], no: optionPercentages[1] } : undefined}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-4 text-sm">

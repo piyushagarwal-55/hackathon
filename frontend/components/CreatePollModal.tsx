@@ -5,7 +5,6 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
 import { toast } from "sonner";
 import { Sparkles, X } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface CreatePollModalProps {
   isOpen: boolean;
@@ -60,7 +59,6 @@ export function CreatePollModal({
     initialMaxWeightCap,
   ]);
 
-  const queryClient = useQueryClient();
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
@@ -71,9 +69,6 @@ export function CreatePollModal({
     if (isSuccess && hash) {
       console.log("Poll creation transaction confirmed! Hash:", hash);
       toast.success("Poll created successfully!");
-
-      // Invalidate all queries to force refresh
-      queryClient.invalidateQueries();
 
       // Immediately trigger refresh and close
       console.log("Poll created! Refreshing list...");
