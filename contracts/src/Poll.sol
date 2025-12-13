@@ -10,6 +10,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @dev Each poll is a separate instance created by PollFactory
  */
 contract Poll {
+    // ============ Enums ============
+    
+    enum VotingMethod {
+        QUADRATIC,    // √credits × reputation (default)
+        SIMPLE,       // credits × reputation (linear)
+        WEIGHTED      // credits × reputation × 1.5 (amplified)
+    }
+    
     // ============ Errors ============
     
     error PollClosed();
@@ -19,6 +27,7 @@ contract Poll {
     error NotAWinner();
     error InvalidOption();
     error InvalidCredits();
+    error InvalidVotingMethod();
     
     // ============ State Variables ============
     
@@ -38,6 +47,10 @@ contract Poll {
     uint256 public totalWeightedVotes;
     uint256 public totalBetAmount; // Total tokens bet on this poll
     
+    // Voting method configuration
+    VotingMethod public votingMethod;     // The actual voting method used
+    bool public isVotingMethodLocked;     // If true, all must use votingMethod; if false, voters choose
+    
     // Track individual user bets for winner payouts
     mapping(address => uint256) public userBets;
     mapping(address => bool) public hasClaimed;
@@ -51,6 +64,7 @@ contract Poll {
         uint256 creditsSpent;
         uint256 weightedVotes;
         uint256 timestamp;
+        VotingMethod method;  // Track which method was used
     }
     
     mapping(address => Vote) public votes;
@@ -61,7 +75,8 @@ contract Poll {
         address indexed voter,
         uint256 indexed option,
         uint256 creditsSpent,
-        uint256 weightedVotes
+        uint256 weightedVotes,
+        VotingMethod method
     );
     
     event WinningsClaimed(
@@ -77,7 +92,9 @@ contract Poll {
         string memory _question,
         string[] memory _options,
         uint256 _duration,
-        uint256 _maxWeightCap
+        uint256 _maxWeightCap,
+        uint8 _votingMethod,          // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
+        bool _isVotingMethodLocked    // true=locked, false=voter choice
     ) {
         repRegistry = ReputationRegistry(_repRegistry);
         bettingToken = IERC20(_bettingToken);
@@ -85,17 +102,20 @@ contract Poll {
         options = _options;
         endTime = block.timestamp + _duration;
         maxWeightCap = _maxWeightCap;
+        votingMethod = VotingMethod(_votingMethod);
+        isVotingMethodLocked = _isVotingMethodLocked;
         isActive = true;
     }
     
     // ============ Core Functions ============
     
     /**
-     * @notice Cast a vote with reputation-weighted quadratic voting
+     * @notice Cast a vote with reputation-weighted voting
      * @param optionId Index of the option to vote for
      * @param tokenAmount Amount of tokens to bet (1 token = 1 credit)
+     * @param preferredMethod Voting method (ignored if poll method is locked)
      */
-    function vote(uint256 optionId, uint256 tokenAmount) external {
+    function vote(uint256 optionId, uint256 tokenAmount, uint8 preferredMethod) external {
         if (block.timestamp >= endTime) revert PollClosed();
         if (votes[msg.sender].timestamp > 0) revert AlreadyVoted();
         if (optionId >= options.length) revert InvalidOption();
@@ -114,8 +134,19 @@ contract Poll {
         userBets[msg.sender] = tokenAmount;
         totalBetAmount += tokenAmount;
         
-        // Calculate vote weight: √(credits) × reputation_multiplier
-        uint256 weightedVotes = _calculateVoteWeight(msg.sender, credits);
+        // Determine which voting method to use
+        VotingMethod methodToUse;
+        if (isVotingMethodLocked) {
+            // Poll creator locked the method
+            methodToUse = votingMethod;
+        } else {
+            // Voter can choose (validate input)
+            if (preferredMethod > 2) revert InvalidVotingMethod();
+            methodToUse = VotingMethod(preferredMethod);
+        }
+        
+        // Calculate vote weight based on chosen method
+        uint256 weightedVotes = _calculateVoteWeightWithMethod(msg.sender, credits, methodToUse);
         
         // Apply vote weight cap
         if (totalVoters == 0) {
@@ -140,7 +171,8 @@ contract Poll {
             option: optionId,
             creditsSpent: credits,
             weightedVotes: weightedVotes,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            method: methodToUse
         });
         
         // Update results
@@ -151,7 +183,7 @@ contract Poll {
         // Award reputation for participating
         repRegistry.addReputation(msg.sender, 10);
         
-        emit VoteCast(msg.sender, optionId, credits, weightedVotes);
+        emit VoteCast(msg.sender, optionId, credits, weightedVotes, methodToUse);
     }
     
     /**
@@ -224,10 +256,18 @@ contract Poll {
     }
     
     /**
-     * @notice Preview vote weight for a user with given credits
+     * @notice Preview vote weight for a user with given credits and method
      */
-    function previewVoteWeight(address user, uint256 credits) external view returns (uint256) {
-        return _calculateVoteWeight(user, credits);
+    function previewVoteWeight(address user, uint256 credits, uint8 method) external view returns (uint256) {
+        VotingMethod voteMethod = isVotingMethodLocked ? votingMethod : VotingMethod(method);
+        return _calculateVoteWeightWithMethod(user, credits, voteMethod);
+    }
+    
+    /**
+     * @notice Get poll voting configuration
+     */
+    function getVotingConfig() external view returns (VotingMethod method, bool isLocked) {
+        return (votingMethod, isVotingMethodLocked);
     }
     
     /**
@@ -247,20 +287,44 @@ contract Poll {
     // ============ Internal Functions ============
     
     /**
-     * @notice Calculate vote weight using quadratic voting + reputation multiplier
-     * @dev Formula: √(credits) × reputation_multiplier
+     * @notice Calculate vote weight with specific voting method
+     * @param user Voter address
+     * @param credits Number of credits spent
+     * @param method Voting method to use
      */
-    function _calculateVoteWeight(address user, uint256 credits) internal view returns (uint256) {
+    function _calculateVoteWeightWithMethod(
+        address user,
+        uint256 credits,
+        VotingMethod method
+    ) internal view returns (uint256) {
         // Get user's reputation multiplier (18 decimals, e.g., 1.5e18 = 1.5x)
         uint256 multiplier = repRegistry.getRepMultiplier(user);
+        uint256 baseVotes;
         
-        // Calculate √(credits) using Babylonian method
-        uint256 sqrtCredits = _sqrt(credits);
+        if (method == VotingMethod.QUADRATIC) {
+            // Quadratic: √credits
+            baseVotes = _sqrt(credits);
+        } else if (method == VotingMethod.SIMPLE) {
+            // Simple/Linear: credits
+            baseVotes = credits;
+        } else {
+            // Weighted: credits × 1.5
+            baseVotes = (credits * 15) / 10;
+        }
         
-        // Apply multiplier: sqrtCredits × multiplier / 1e18
-        uint256 weightedVotes = (sqrtCredits * multiplier) / 1e18;
+        // Apply reputation multiplier
+        uint256 weightedVotes = (baseVotes * multiplier) / 1e18;
         
         return weightedVotes;
+    }
+    
+    /**
+     * @notice Calculate vote weight using quadratic voting + reputation multiplier (deprecated)
+     * @dev Formula: √(credits) × reputation_multiplier
+     * @dev Kept for backward compatibility
+     */
+    function _calculateVoteWeight(address user, uint256 credits) internal view returns (uint256) {
+        return _calculateVoteWeightWithMethod(user, credits, VotingMethod.QUADRATIC);
     }
     
     /**

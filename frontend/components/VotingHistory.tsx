@@ -4,7 +4,12 @@ import { useAccount } from 'wagmi';
 import { formatTimestamp } from '@/lib/calculations';
 import { History } from 'lucide-react';
 
-export function VotingHistory() {
+interface VotingHistoryProps {
+  compact?: boolean;
+  limit?: number;
+}
+
+export function VotingHistory({ compact = false, limit }: VotingHistoryProps = {}) {
   const { address, isConnected } = useAccount();
 
   // In production, fetch this from contract events or indexer
@@ -18,11 +23,33 @@ export function VotingHistory() {
           timestamp: BigInt(Math.floor(Date.now() / 1000) - 3600),
           txHash: '0x1234...5678',
         },
+        {
+          pollQuestion: 'Should we enable governance token staking?',
+          option: 'Yes',
+          creditsSpent: 15,
+          weightedVotes: 12.5,
+          timestamp: BigInt(Math.floor(Date.now() / 1000) - 7200),
+          txHash: '0xabcd...efgh',
+        },
+        {
+          pollQuestion: 'New feature: Add dark mode to mobile app?',
+          option: 'Definitely',
+          creditsSpent: 20,
+          weightedVotes: 15,
+          timestamp: BigInt(Math.floor(Date.now() / 1000) - 86400),
+          txHash: '0x9876...5432',
+        },
       ]
     : [];
 
+  const displayHistory = limit ? mockHistory.slice(0, limit) : mockHistory;
+
   if (!isConnected) {
-    return (
+    return compact ? (
+      <div className="text-center py-4">
+        <p className="text-slate-400 text-sm">Connect wallet</p>
+      </div>
+    ) : (
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
         <h3 className="text-2xl font-bold text-white mb-4">📜 Your Voting History</h3>
         <p className="text-slate-400 text-center py-8">
@@ -33,7 +60,11 @@ export function VotingHistory() {
   }
 
   if (mockHistory.length === 0) {
-    return (
+    return compact ? (
+      <div className="text-center py-4">
+        <p className="text-slate-400 text-sm">No activity yet</p>
+      </div>
+    ) : (
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
         <h3 className="text-2xl font-bold text-white mb-4">📜 Your Voting History</h3>
         <div className="text-center py-8">
@@ -41,6 +72,36 @@ export function VotingHistory() {
           <p className="text-slate-400">You haven't voted yet</p>
           <p className="text-sm text-slate-500 mt-2">Cast your first vote to start building reputation!</p>
         </div>
+      </div>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        {displayHistory.map((vote, index) => (
+          <div
+            key={index}
+            className="p-3 bg-slate-800/30 border border-slate-700/30 rounded-lg hover:bg-slate-800/50 transition-all"
+          >
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <p className="text-sm text-white font-medium line-clamp-1 flex-1">
+                {vote.pollQuestion}
+              </p>
+              <span className="text-xs text-slate-500 whitespace-nowrap">
+                {formatTimestamp(vote.timestamp)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-xs text-emerald-400">
+                {vote.option}
+              </span>
+              <span className="text-xs text-slate-500">
+                {vote.creditsSpent} credits • {vote.weightedVotes.toFixed(1)} weight
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -55,7 +116,7 @@ export function VotingHistory() {
       </div>
 
       <div className="space-y-4">
-        {mockHistory.map((vote, index) => (
+        {displayHistory.map((vote, index) => (
           <div
             key={index}
             className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:bg-slate-800/50 hover:border-slate-600/50 transition-all"

@@ -10,7 +10,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, icon, actions, children }: PageHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800/50 bg-slate-950/55 backdrop-blur-xl">
+    <header className="border-b border-slate-800/50 bg-slate-950/55 backdrop-blur-xl">
       <div className="rv-container py-5">
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0">

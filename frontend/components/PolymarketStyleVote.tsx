@@ -5,10 +5,11 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI, POLL_ABI, MOCK_TOKEN_ADDRESS, ERC20_ABI } from '@/lib/contracts';
 import { calculateVoteWeight, formatNumber, getReputationLevel } from '@/lib/calculations';
 import { toast } from 'sonner';
-import { CheckCircle2, TrendingUp, Info, Zap, Scale } from 'lucide-react';
+import { CheckCircle2, TrendingUp, Info, Zap, Scale, Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { MarketChart } from './MarketChart';
 import { TokenFaucet } from './TokenFaucet';
+import { ClaimWinnings } from './ClaimWinnings';
 import { parseUnits, formatUnits } from 'viem';
 
 interface PolymarketStyleVoteProps {
@@ -28,6 +29,9 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
   const [votingMethod, setVotingMethod] = useState<VotingMethod>('quadratic');
   const [showMethodInfo, setShowMethodInfo] = useState(false);
   const queryClient = useQueryClient();
+
+  // Check if address is zero address (needs to be declared first)
+  const isZeroAddress = pollAddress === '0x0000000000000000000000000000000000000000';
 
   // Get user's reputation multiplier
   const { data: multiplier } = useReadContract({
@@ -63,9 +67,6 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
       refetchInterval: 10000,
     },
   });
-
-  // Check if user already voted
-  const isZeroAddress = pollAddress === '0x0000000000000000000000000000000000000000';
   const { data: existingVote, refetch: refetchVote, queryKey: voteQueryKey } = useReadContract({
     address: pollAddress,
     abi: POLL_ABI,
@@ -99,14 +100,54 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
     },
   });
 
-  // Write contract
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  // Write contracts - separate for approve and vote
+  const { writeContract: writeVote, data: voteHash, isPending: isVotePending } = useWriteContract();
+  const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
+  
+  const { isLoading: isVoteConfirming, isSuccess: isVoteSuccess } = useWaitForTransactionReceipt({ hash: voteHash });
+  const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
 
   const hasVoted = existingVote && existingVote[3] > 0n;
 
+  // Handle vote success with celebration
   useEffect(() => {
-    if (isSuccess && hash) {
+    if (isVoteSuccess && voteHash) {
+      // Show confetti effect
+      const duration = 3000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      function randomInRange(min: number, max: number) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        // Create confetti effect using DOM elements
+        const colors = ['#10b981', '#06b6d4', '#8b5cf6', '#f59e0b'];
+        for (let i = 0; i < 5; i++) {
+          const confetti = document.createElement('div');
+          confetti.style.position = 'fixed';
+          confetti.style.width = '10px';
+          confetti.style.height = '10px';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.left = `${randomInRange(0, 100)}%`;
+          confetti.style.top = `${randomInRange(0, 100)}%`;
+          confetti.style.borderRadius = '50%';
+          confetti.style.pointerEvents = 'none';
+          confetti.style.zIndex = '9999';
+          confetti.style.animation = 'confettiFall 1s ease-out forwards';
+          document.body.appendChild(confetti);
+          setTimeout(() => confetti.remove(), 1000);
+        }
+      }, 250);
+
       setTimeout(() => {
         queryClient.invalidateQueries({ 
           predicate: (query) => JSON.stringify(query.queryKey).includes(pollAddress.toLowerCase())
@@ -115,10 +156,23 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
         refetchBalance();
         refetchAllowance();
         if (onVoteSuccess) onVoteSuccess();
-        toast.success('✅ Vote successfully recorded!');
+        toast.success('🎉 Vote successfully recorded!', {
+          description: 'Your reputation has been updated',
+          duration: 5000,
+        });
       }, 2000);
     }
-  }, [isSuccess, refetchVote, refetchBalance, refetchAllowance, onVoteSuccess, hash, queryClient, pollAddress]);
+  }, [isVoteSuccess, refetchVote, refetchBalance, refetchAllowance, onVoteSuccess, voteHash, queryClient, pollAddress]);
+
+  // Handle approval success
+  useEffect(() => {
+    if (isApproveSuccess && approveHash) {
+      setTimeout(() => {
+        refetchAllowance();
+        toast.success('✅ Tokens approved! You can now vote.');
+      }, 2000);
+    }
+  }, [isApproveSuccess, approveHash, refetchAllowance]);
 
   const handleApprove = async () => {
     if (!isConnected) {
@@ -126,10 +180,21 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
       return;
     }
 
+    // Validate input
+    if (creditsSpent <= 0) {
+      toast.error('Amount must be greater than 0');
+      return;
+    }
+
+    if (creditsSpent > 100) {
+      toast.error('Maximum 100 REP tokens per vote');
+      return;
+    }
+
     const tokenAmount = parseUnits(creditsSpent.toString(), 18);
 
     try {
-      writeContract({
+      writeApprove({
         address: MOCK_TOKEN_ADDRESS,
         abi: ERC20_ABI,
         functionName: 'approve',
@@ -137,6 +202,7 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
       });
       toast.info('Approval transaction submitted...');
     } catch (error: any) {
+      console.error('Approval error:', error);
       toast.error(error.shortMessage || error.message || 'Failed to approve tokens');
     }
   };
@@ -147,10 +213,21 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
       return;
     }
 
+    // Validate input
+    if (creditsSpent <= 0) {
+      toast.error('Amount must be greater than 0');
+      return;
+    }
+
+    if (creditsSpent > 100) {
+      toast.error('Maximum 100 REP tokens per vote');
+      return;
+    }
+
     const tokenAmount = parseUnits(creditsSpent.toString(), 18);
 
-    // Check if user has enough tokens
-    if (tokenBalance && tokenBalance < tokenAmount) {
+    // Check if user has enough tokens (FIXED: handle undefined)
+    if (!tokenBalance || tokenBalance < tokenAmount) {
       toast.error('Insufficient REP tokens. Get free tokens from the faucet!');
       return;
     }
@@ -162,15 +239,29 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
     }
 
     try {
-      writeContract({
+      writeVote({
         address: pollAddress,
         abi: POLL_ABI,
         functionName: 'vote',
-        args: [BigInt(selectedOption), tokenAmount],
+        args: [BigInt(selectedOption), tokenAmount, votingMethod],
       });
       toast.info('Vote transaction submitted...');
     } catch (error: any) {
-      toast.error(error.shortMessage || error.message || 'Failed to cast vote');
+      console.error('Vote error:', error);
+      
+      // Parse specific error messages
+      const errorMessage = error.shortMessage || error.message || '';
+      if (errorMessage.includes('PollClosed')) {
+        toast.error('⏱️ This poll has ended');
+      } else if (errorMessage.includes('AlreadyVoted')) {
+        toast.error('✋ You have already voted on this poll');
+      } else if (errorMessage.includes('InvalidOption')) {
+        toast.error('❌ Invalid option selected');
+      } else if (errorMessage.includes('InvalidCredits')) {
+        toast.error('❌ Invalid token amount');
+      } else {
+        toast.error('Failed to cast vote: ' + errorMessage);
+      }
     }
   };
 
@@ -220,30 +311,66 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
     query: { enabled: !isZeroAddress },
   });
 
+  // Get total bet amount (prize pool)
+  const { data: totalBetAmount } = useReadContract({
+    address: pollAddress,
+    abi: POLL_ABI,
+    functionName: 'totalBetAmount',
+    query: { 
+      enabled: !isZeroAddress,
+      refetchInterval: 10000,
+    },
+  });
+
+  // Get user's bet amount
+  const { data: userBetAmount } = useReadContract({
+    address: pollAddress,
+    abi: POLL_ABI,
+    functionName: 'userBets',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected && !isZeroAddress,
+      refetchInterval: 10000,
+    },
+  });
+
   const isEnded = pollEndTime ? BigInt(Date.now()) > pollEndTime * 1000n : false;
   const timeRemaining = pollEndTime ? Number(pollEndTime) - Math.floor(Date.now() / 1000) : 0;
   const daysLeft = Math.floor(timeRemaining / 86400);
   const hoursLeft = Math.floor((timeRemaining % 86400) / 3600);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-scale-in">
       {/* Left Column - Chart and Stats */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
         {/* Header */}
-        <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+        <div className="bg-[#131a22] backdrop-blur-sm rounded-xl p-6 border border-slate-800/40">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-white mb-3">{question}</h1>
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">Volume:</span>
-                  <span className="font-bold text-white">${formatNumber(totalVotes * 100)}</span>
+                  <span className="text-slate-400">Prize Pool:</span>
+                  <span className="font-bold text-emerald-400">
+                    {totalBetAmount ? `${parseFloat(formatUnits(totalBetAmount, 18)).toFixed(2)} REP` : '0 REP'}
+                  </span>
                 </div>
                 <div className="w-px h-4 bg-slate-700" />
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400">Voters:</span>
                   <span className="font-bold text-white">{totalVoters?.toString() || '0'}</span>
                 </div>
+                {userBetAmount && userBetAmount > 0n && (
+                  <>
+                    <div className="w-px h-4 bg-slate-700" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400">Your Bet:</span>
+                      <span className="font-bold text-amber-400">
+                        {formatUnits(userBetAmount, 18)} REP
+                      </span>
+                    </div>
+                  </>
+                )}
                 <div className="w-px h-4 bg-slate-700" />
                 <div className="flex items-center gap-2">
                   {isEnded ? (
@@ -281,8 +408,8 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
       </div>
 
       {/* Right Column - Trading Panel */}
-      <div className="space-y-4">
-        <div className="sticky top-24 bg-slate-900/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+      <div className="space-y-4 order-1 lg:order-2">
+        <div className="sticky top-24 bg-[#131a22] backdrop-blur-sm rounded-xl p-6 border border-slate-800/40">
           {hasVoted ? (
             <div className="text-center">
               <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -321,7 +448,7 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
               {/* Voting Method Selection */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs text-slate-400 font-medium">Voting Method</label>
+                  <label className="text-xs text-slate-400 font-medium">Voting Method (Preview Only)</label>
                   <button
                     onClick={() => setShowMethodInfo(!showMethodInfo)}
                     className="text-slate-400 hover:text-white transition-colors"
@@ -329,6 +456,9 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
                     <Info className="w-4 h-4" />
                   </button>
                 </div>
+                <p className="text-xs text-amber-400/80 mb-2">
+                  ⚠️ Contract uses quadratic voting. This selector is for weight preview only.
+                </p>
                 
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -409,13 +539,31 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
 
               {/* Amount Input */}
               <div className="mb-4">
-                <label className="text-xs text-slate-400 mb-2 block">Amount (REP Tokens)</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs text-slate-400">Amount (REP Tokens)</label>
+                  {tokenBalance && (
+                    <span className="text-xs text-slate-500">
+                      Balance: {parseFloat(formatUnits(tokenBalance, 18)).toFixed(2)} REP
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-emerald-400 font-semibold">REP</span>
                   <input
                     type="number"
+                    min="1"
+                    max="100"
                     value={creditsSpent}
-                    onChange={(e) => setCreditsSpent(Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      if (val < 0) return;
+                      if (val > 100) {
+                        setCreditsSpent(100);
+                        toast.warning('Maximum 100 REP per vote');
+                        return;
+                      }
+                      setCreditsSpent(val);
+                    }}
                     className="w-full pl-16 pr-4 py-3 bg-slate-800/60 border border-slate-700/60 rounded-lg text-white text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     placeholder="0"
                   />
@@ -425,14 +573,21 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
                     <button
                       key={val}
                       onClick={() => setCreditsSpent(val)}
-                      className="px-3 py-1.5 bg-slate-800/40 border border-slate-700/40 rounded text-xs text-slate-300 hover:text-white hover:bg-slate-800/60"
+                      className="px-3 py-1.5 bg-slate-800/40 border border-slate-700/40 rounded text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                     >
                       {val} REP
                     </button>
                   ))}
                   <button
-                    onClick={() => setCreditsSpent(100)}
-                    className="px-3 py-1.5 bg-slate-800/40 border border-slate-700/40 rounded text-xs text-slate-300 hover:text-white hover:bg-slate-800/60"
+                    onClick={() => {
+                      if (tokenBalance) {
+                        const maxAmount = Math.min(100, Math.floor(Number(formatUnits(tokenBalance, 18))));
+                        setCreditsSpent(maxAmount);
+                      } else {
+                        setCreditsSpent(100);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-slate-800/40 border border-slate-700/40 rounded text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
                   >
                     Max
                   </button>
@@ -445,13 +600,23 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
               </div>
 
               {/* Approval Button */}
-              {tokenBalance && tokenAllowance !== undefined && tokenAllowance < parseUnits(creditsSpent.toString(), 18) && (
+              {!hasVoted && tokenBalance && tokenAllowance !== undefined && tokenAllowance < parseUnits(creditsSpent.toString(), 18) && !isApproveSuccess && (
                 <button
                   onClick={handleApprove}
-                  disabled={isPending || isConfirming}
-                  className="w-full py-3 mb-4 rounded-lg font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all"
+                  disabled={isApprovePending || isApproveConfirming}
+                  className="w-full py-3 mb-4 rounded-lg font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-500 transition-all flex items-center justify-center gap-2"
                 >
-                  {isPending || isConfirming ? '🔐 Approving...' : `Approve ${creditsSpent} REP Tokens`}
+                  {isApprovePending || isApproveConfirming ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{isApprovePending ? 'Confirm in wallet...' : 'Approving...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Approve {creditsSpent} REP Tokens</span>
+                    </>
+                  )}
                 </button>
               )}
 
@@ -472,30 +637,58 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
                 <div className="mt-3 pt-3 border-t border-slate-700/40 flex items-center justify-between text-xs">
                   <span className="text-slate-400">Impact on {options[selectedOption]}</span>
                   <span className="text-emerald-400 font-semibold">
-                    +{((weightedVotes / (totalVotes + weightedVotes)) * 100).toFixed(2)}%
+                    +{totalVotes + weightedVotes > 0 
+                      ? ((weightedVotes / (totalVotes + weightedVotes)) * 100).toFixed(2)
+                      : '0.00'}%
                   </span>
                 </div>
               </div>
 
-              {/* Trade Button */}
+              {/* Vote Button */}
               <button
                 onClick={handleVote}
-                disabled={!isConnected || isPending || isConfirming}
-                className={`w-full py-3.5 rounded-lg font-bold text-base transition-all ${
-                  !isConnected
+                disabled={
+                  !isConnected || 
+                  isVotePending || 
+                  isVoteConfirming ||
+                  hasVoted ||
+                  !tokenBalance ||
+                  tokenBalance < parseUnits(creditsSpent.toString(), 18) ||
+                  !tokenAllowance ||
+                  tokenAllowance < parseUnits(creditsSpent.toString(), 18)
+                }
+                className={`w-full py-3.5 rounded-lg font-bold text-base transition-all flex items-center justify-center gap-2 ${
+                  !isConnected || hasVoted || !tokenBalance || (tokenAllowance && tokenAllowance < parseUnits(creditsSpent.toString(), 18))
                     ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/30'
                 }`}
               >
-                {!isConnected
-                  ? 'Connect Wallet'
-                  : isPending
-                  ? '🔐 Confirming...'
-                  : isConfirming
-                  ? '⏳ Voting...'
-                  : isSuccess
-                  ? '✅ Done'
-                  : 'Place Vote'}
+                {!isConnected ? (
+                  'Connect Wallet'
+                ) : hasVoted ? (
+                  '✅ Already Voted'
+                ) : !tokenBalance || tokenBalance < parseUnits(creditsSpent.toString(), 18) ? (
+                  '💰 Insufficient Balance'
+                ) : !tokenAllowance || tokenAllowance < parseUnits(creditsSpent.toString(), 18) ? (
+                  '🔒 Approve Tokens First'
+                ) : isVotePending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Confirm in Wallet...</span>
+                  </>
+                ) : isVoteConfirming ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Voting...</span>
+                  </>
+                ) : isVoteSuccess ? (
+                  '✅ Vote Recorded'
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5" />
+                    <span>Place Vote</span>
+                  </>
+                )}
               </button>
 
               <p className="text-xs text-slate-500 text-center mt-3">
@@ -505,9 +698,14 @@ export function PolymarketStyleVote({ pollAddress, options, question, onVoteSucc
           )}
         </div>
 
+        {/* Claim Winnings Section */}
+        {hasVoted && isEnded && (
+          <ClaimWinnings pollAddress={pollAddress} options={options} />
+        )}
+
         {/* Related Markets */}
-        {!hasVoted && (
-          <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border border-slate-700/50">
+        {!hasVoted && !isEnded && (
+          <div className="bg-[#131a22] backdrop-blur-sm rounded-xl p-5 border border-slate-800/40">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-400" />
               Related Markets

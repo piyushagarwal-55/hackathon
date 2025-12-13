@@ -27,9 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen text-white`}
-      >
+          <body
+            className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-[#0f1419] min-h-screen text-white`}
+          >
         <Providers>
           {children}
           <Toaster position="top-right" theme="dark" />

@@ -11,7 +11,7 @@ import { ReputationLeaderboard } from "@/components/ReputationLeaderboard";
 import { VotingHistory } from "@/components/VotingHistory";
 import { useReadContract, useAccount } from "wagmi";
 import { POLL_FACTORY_ADDRESS, POLL_FACTORY_ABI } from "@/lib/contracts";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TrendingUp, Plus, Search, Filter, BarChart3, Clock, Users } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { NetworkHealth } from "@/components/NetworkHealth";
@@ -33,11 +33,30 @@ export default function Home() {
     options: string[];
     question?: string;
   } | null>(null);
-  const [activeView, setActiveView] = useState<
-    "markets" | "leaderboard" | "history"
-  >("markets");
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'ended'>('all');
+  const [filterPopularity, setFilterPopularity] = useState<'all' | 'popular' | 'new'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'votes' | 'ending'>('recent');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowFilterMenu(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setShowSortMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handlePollCreated = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -63,47 +82,9 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Navigation */}
       <Navigation onCreateClick={() => setIsCreateModalOpen(true)} showCreateButton={true} />
-      
-      {/* Sub Navigation for Dashboard Views */}
-      <div className="bg-slate-900/40 border-b border-slate-800/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 py-3">
-            <button
-              onClick={() => setActiveView("markets")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeView === "markets"
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              📊 Markets
-            </button>
-            <button
-              onClick={() => setActiveView("leaderboard")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeView === "leaderboard"
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              🏆 Leaderboard
-            </button>
-            <button
-              onClick={() => setActiveView("history")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeView === "history"
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              📜 Activity
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -115,11 +96,12 @@ export default function Home() {
           <RepDisplay />
         </div>
 
-        {/* Content based on active view */}
-        {activeView === "markets" && (
-          <div className="space-y-6">
+        {/* Unified Dashboard - 2 Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+          {/* Left Column - Active Markets (60% - 2 cols) */}
+          <div className="lg:col-span-2 space-y-6 animate-slide-up">
             {/* Search & Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between animate-fade-in">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
@@ -127,19 +109,200 @@ export default function Home() {
                   placeholder="Search markets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
               <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-slate-300 hover:text-white hover:border-slate-600/60 transition-all">
-                  <Filter className="w-4 h-4" />
-                  <span className="text-sm">Filter</span>
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-900/60 border border-slate-700/60 rounded-lg text-slate-300 hover:text-white hover:border-slate-600/60 transition-all">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="text-sm">Trending</span>
-                </button>
+                {/* Filter Button with Dropdown */}
+                <div className="relative" ref={filterRef}>
+                  <button 
+                    onClick={() => {
+                      setShowFilterMenu(!showFilterMenu);
+                      setShowSortMenu(false);
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2.5 bg-slate-900/60 border rounded-lg text-slate-300 hover:text-white hover:border-slate-600/60 transition-all ${
+                      (filterStatus !== 'all' || filterPopularity !== 'all') 
+                        ? 'border-emerald-500/60 text-emerald-400' 
+                        : 'border-slate-700/60'
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="text-sm">Filter</span>
+                    {(filterStatus !== 'all' || filterPopularity !== 'all') && (
+                      <span className="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                    )}
+                  </button>
+                  {showFilterMenu && (
+                    <div className="absolute top-full mt-2 right-0 w-64 bg-slate-900/95 backdrop-blur-xl border border-slate-700/60 rounded-lg shadow-xl z-50 p-4">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs text-slate-400 font-medium mb-2 block">Status</label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setFilterStatus('all')}
+                              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                filterStatus === 'all' 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                                  : 'bg-slate-800/50 text-slate-400 border border-slate-700/40 hover:text-white'
+                              }`}
+                            >
+                              All
+                            </button>
+                            <button
+                              onClick={() => setFilterStatus('active')}
+                              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                filterStatus === 'active' 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                                  : 'bg-slate-800/50 text-slate-400 border border-slate-700/40 hover:text-white'
+                              }`}
+                            >
+                              Active
+                            </button>
+                            <button
+                              onClick={() => setFilterStatus('ended')}
+                              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                filterStatus === 'ended' 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                                  : 'bg-slate-800/50 text-slate-400 border border-slate-700/40 hover:text-white'
+                              }`}
+                            >
+                              Ended
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-400 font-medium mb-2 block">Popularity</label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setFilterPopularity('all')}
+                              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                filterPopularity === 'all' 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                                  : 'bg-slate-800/50 text-slate-400 border border-slate-700/40 hover:text-white'
+                              }`}
+                            >
+                              All
+                            </button>
+                            <button
+                              onClick={() => setFilterPopularity('popular')}
+                              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                filterPopularity === 'popular' 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                                  : 'bg-slate-800/50 text-slate-400 border border-slate-700/40 hover:text-white'
+                              }`}
+                            >
+                              Popular
+                            </button>
+                            <button
+                              onClick={() => setFilterPopularity('new')}
+                              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                                filterPopularity === 'new' 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                                  : 'bg-slate-800/50 text-slate-400 border border-slate-700/40 hover:text-white'
+                              }`}
+                            >
+                              New
+                            </button>
+                          </div>
+                        </div>
+                        {(filterStatus !== 'all' || filterPopularity !== 'all') && (
+                          <button
+                            onClick={() => {
+                              setFilterStatus('all');
+                              setFilterPopularity('all');
+                            }}
+                            className="w-full px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/40 rounded text-xs font-medium hover:bg-red-500/30 transition-all"
+                          >
+                            Clear Filters
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sort/Trending Button with Dropdown */}
+                <div className="relative" ref={sortRef}>
+                  <button 
+                    onClick={() => {
+                      setShowSortMenu(!showSortMenu);
+                      setShowFilterMenu(false);
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2.5 bg-slate-900/60 border rounded-lg text-slate-300 hover:text-white hover:border-slate-600/60 transition-all ${
+                      sortBy !== 'recent' 
+                        ? 'border-emerald-500/60 text-emerald-400' 
+                        : 'border-slate-700/60'
+                    }`}
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="text-sm">
+                      {sortBy === 'recent' ? 'Recent' : sortBy === 'votes' ? 'Trending' : 'Ending Soon'}
+                    </span>
+                  </button>
+                  {showSortMenu && (
+                    <div className="absolute top-full mt-2 right-0 w-48 bg-slate-900/95 backdrop-blur-xl border border-slate-700/60 rounded-lg shadow-xl z-50 p-2">
+                      <button
+                        onClick={() => {
+                          setSortBy('recent');
+                          setShowSortMenu(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-all ${
+                          sortBy === 'recent' 
+                            ? 'bg-emerald-500/20 text-emerald-400' 
+                            : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                        }`}
+                      >
+                        📅 Most Recent
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy('votes');
+                          setShowSortMenu(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-all ${
+                          sortBy === 'votes' 
+                            ? 'bg-emerald-500/20 text-emerald-400' 
+                            : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                        }`}
+                      >
+                        🔥 Most Votes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy('ending');
+                          setShowSortMenu(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-all ${
+                          sortBy === 'ending' 
+                            ? 'bg-emerald-500/20 text-emerald-400' 
+                            : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                        }`}
+                      >
+                        ⏰ Ending Soon
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
+
+            {/* Markets Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-emerald-400" />
+                Active Markets
+              </h2>
+              <span className="text-sm text-slate-400">
+                {pollCount?.toString() ?? "0"} markets
+              </span>
             </div>
 
             {/* Selected Poll - Full Width Polymarket Style */}
@@ -151,63 +314,73 @@ export default function Home() {
                 onVoteSuccess={handleVoteSuccess}
               />
             ) : (
-              /* Markets Grid - When no poll selected */
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Market List */}
-                <div className="lg:col-span-2 space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-emerald-400" />
-                      Active Markets
-                    </h2>
-                    <span className="text-sm text-slate-400">
-                      {pollCount?.toString() ?? "0"} markets
-                    </span>
-                  </div>
-                  
-                  <PollList
-                    onSelectPoll={(address, options, question) =>
-                      setSelectedPoll({ address, options, question })
-                    }
-                    refreshTrigger={refreshTrigger}
-                    onShare={handleShare}
-                  />
-                </div>
-
-                {/* Right Column - Placeholder */}
-                <div className="space-y-4">
-                  <div className="sticky top-24 bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-8 border border-slate-700/50 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800/50 flex items-center justify-center">
-                      <BarChart3 className="w-8 h-8 text-slate-600" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-2">
-                      Select a Market
-                    </h3>
-                    <p className="text-slate-400 text-sm">
-                      Choose a poll from the list to view details and cast your vote
-                    </p>
-                  </div>
-                </div>
-              </div>
+              /* Market List */
+              <PollList
+                onSelectPoll={(address, options, question) =>
+                  setSelectedPoll({ address, options, question })
+                }
+                refreshTrigger={refreshTrigger}
+                onShare={handleShare}
+                searchQuery={searchQuery}
+                filterStatus={filterStatus}
+                filterPopularity={filterPopularity}
+                sortBy={sortBy}
+              />
             )}
           </div>
-        )}
 
-        {activeView === "leaderboard" && (
-          <div className="max-w-4xl mx-auto">
-            <ReputationLeaderboard />
+          {/* Right Column - Leaderboard + Activity (40% - 1 col) */}
+          <div className="space-y-6 animate-scale-in" style={{ animationDelay: '0.1s' }}>
+            {/* Compact Leaderboard - Top 5 */}
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  🏆 Top Contributors
+                </h3>
+                <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                  View All →
+                </a>
+              </div>
+              <ReputationLeaderboard compact={true} limit={5} />
+            </div>
+
+            {/* Activity Feed */}
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  📜 Recent Activity
+                </h3>
+                <a href="/governance" className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                  View All →
+                </a>
+              </div>
+              <VotingHistory compact={true} limit={5} />
+            </div>
+
+            {/* Quick Stats */}
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 backdrop-blur-lg rounded-xl p-6 border border-slate-700/50">
+              <h3 className="text-lg font-bold text-white mb-4">Platform Stats</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 text-sm">Total Markets</span>
+                  <span className="text-white font-bold">{pollCount?.toString() ?? "0"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 text-sm">24h Volume</span>
+                  <span className="text-emerald-400 font-bold">1,247</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400 text-sm">Active Users</span>
+                  <span className="text-amber-400 font-bold">328</span>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
 
-        {activeView === "history" && (
-          <div className="max-w-5xl mx-auto">
-            <VotingHistory />
-          </div>
-        )}
-
-        {/* Info Cards Section - Only show in markets view */}
-        {activeView === "markets" && (
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Info Cards Section */}
+        <div className="mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 rounded-xl p-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
@@ -250,7 +423,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Compact Footer */}

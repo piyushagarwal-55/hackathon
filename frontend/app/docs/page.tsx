@@ -1,11 +1,13 @@
 'use client';
 
 import { BookOpen, Shield, TrendingUp, Users, Code, Zap, Lock, Award } from 'lucide-react';
+import { Navigation } from '@/components/Navigation';
 import { PageHeader } from '@/components/PageHeader';
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#0f1419]">
+      <Navigation showCreateButton={false} />
       <PageHeader
         title="Documentation"
         subtitle="Learn how RepVote works and how to participate in governance"

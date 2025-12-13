@@ -6,6 +6,7 @@ import { ReputationLeaderboard } from '@/components/ReputationLeaderboard';
 import { VotingHistory } from '@/components/VotingHistory';
 import { WorkflowBuilder } from '@/components/WorkflowBuilder';
 import { NetworkHealth } from '@/components/NetworkHealth';
+import { Navigation } from '@/components/Navigation';
 import { PageHeader } from '@/components/PageHeader';
 import { useAccount, useReadContract } from 'wagmi';
 import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI } from '@/lib/contracts';
@@ -50,17 +51,12 @@ export default function GovernancePage() {
   const multiplier = userStats ? Number(userStats[1]) / 1e18 : 0.3;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#0f1419]">
+      <Navigation onCreateClick={() => setIsCreateModalOpen(true)} showCreateButton={true} />
       <PageHeader
         title="Governance"
         subtitle="Create proposals, track reputation, and coordinate decisions"
         icon={<Users className="w-5 h-5 text-emerald-300" />}
-        actions={
-          <button onClick={() => setIsCreateModalOpen(true)} className="rv-btn-primary">
-            <Plus className="w-5 h-5" />
-            Create Proposal
-          </button>
-        }
       />
 
       {/* Main Content */}

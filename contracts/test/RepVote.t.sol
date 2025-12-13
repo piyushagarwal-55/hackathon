@@ -52,7 +52,9 @@ contract RepVoteTest is Test {
             "Which feature to build?",
             options,
             7 days,
-            10  // 10x max weight cap
+            10,  // 10x max weight cap
+            0,   // Quadratic voting
+            true // Locked method
         );
         
         poll = Poll(pollAddress);
@@ -105,7 +107,7 @@ contract RepVoteTest is Test {
         vm.startPrank(bob);
         token.faucet(); // Get tokens
         token.approve(address(poll), 4 * 1e18);
-        poll.vote(0, 4 * 1e18);  // √4 = 2, 2 * 1.5 = 3 votes
+        poll.vote(0, 4 * 1e18, 0);  // √4 = 2, 2 * 1.5 = 3 votes, method=0 (quadratic)
         vm.stopPrank();
         
         (,, uint256 bobVotes,) = poll.votes(bob);
@@ -115,7 +117,7 @@ contract RepVoteTest is Test {
         vm.startPrank(charlie);
         token.faucet();
         token.approve(address(poll), 16 * 1e18);
-        poll.vote(1, 16 * 1e18);  // √16 = 4, 4 * 0.5 = 2 votes
+        poll.vote(1, 16 * 1e18, 0);  // √16 = 4, 4 * 0.5 = 2 votes, method=0 (quadratic)
         vm.stopPrank();
         
         (,, uint256 charlieVotes,) = poll.votes(charlie);

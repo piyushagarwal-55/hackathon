@@ -5,6 +5,7 @@ import { PollList } from '@/components/PollList';
 import { VoteCard } from '@/components/VoteCard';
 import { ResultsChart } from '@/components/ResultsChart';
 import { ShareModal } from '@/components/ShareModal';
+import { Navigation } from '@/components/Navigation';
 import { BarChart3, Clock } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { usePublicClient, useReadContract } from 'wagmi';
@@ -71,7 +72,8 @@ export default function PollsPage() {
   }, [publicClient, recentPollList]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#0f1419]">
+      <Navigation showCreateButton={false} />
       <PageHeader
         title="Active Polls"
         subtitle="Browse polls and vote with reputation-weighted quadratic voting"

@@ -16,7 +16,12 @@ interface LeaderboardEntry {
   isCurrentUser: boolean;
 }
 
-export function ReputationLeaderboard() {
+interface ReputationLeaderboardProps {
+  compact?: boolean;
+  limit?: number;
+}
+
+export function ReputationLeaderboard({ compact = false, limit }: ReputationLeaderboardProps = {}) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const [userAddresses, setUserAddresses] = useState<Set<string>>(new Set());
@@ -162,7 +167,11 @@ export function ReputationLeaderboard() {
   }, []);
 
   if (isLoading) {
-    return (
+    return compact ? (
+      <div className="text-center py-4">
+        <p className="text-slate-400 text-sm">Loading...</p>
+      </div>
+    ) : (
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
         <h3 className="text-2xl font-bold text-white mb-4">
           🏆 Reputation Leaderboard
@@ -175,7 +184,11 @@ export function ReputationLeaderboard() {
   }
 
   if (leaderboardData.length === 0) {
-    return (
+    return compact ? (
+      <div className="text-center py-4">
+        <p className="text-slate-400 text-sm">No data yet</p>
+      </div>
+    ) : (
       <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50">
         <h3 className="text-2xl font-bold text-white mb-4">
           🏆 Reputation Leaderboard
@@ -184,6 +197,56 @@ export function ReputationLeaderboard() {
           No users with reputation yet. Start voting to appear on the
           leaderboard!
         </p>
+      </div>
+    );
+  }
+
+  const displayData = limit ? leaderboardData.slice(0, limit) : leaderboardData;
+
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        {displayData.map((user, index) => {
+          const { level: userLevel, color: userColor, emoji } = getReputationLevel(user.multiplier);
+          const multiplierValue = Number(user.multiplier) / 1e18;
+
+          return (
+            <div
+              key={user.address}
+              className={`p-3 rounded-lg border transition-all ${
+                user.isCurrentUser
+                  ? "bg-emerald-500/10 border-emerald-500/30"
+                  : "bg-slate-800/30 border-slate-700/30 hover:bg-slate-800/50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-lg font-bold text-slate-400 w-6">
+                  #{index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-slate-300 truncate">
+                      {user.address.slice(0, 6)}...{user.address.slice(-4)}
+                    </span>
+                    {user.isCurrentUser && (
+                      <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 rounded text-xs text-emerald-400">
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {formatNumber(Number(user.reputation))} REP
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-sm font-bold ${userColor}`}>
+                    {multiplierValue.toFixed(1)}x
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -203,7 +266,7 @@ export function ReputationLeaderboard() {
       </div>
 
       <div className="space-y-3">
-        {leaderboardData.map((user, index) => {
+        {displayData.map((user, index) => {
           const { level: userLevel, color: userColor } = getReputationLevel(
             user.multiplier
           );

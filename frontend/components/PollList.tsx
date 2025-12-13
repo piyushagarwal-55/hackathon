@@ -12,14 +12,27 @@ import { Share2 } from "lucide-react";
 
 interface PollListProps {
   onSelectPoll: (pollAddress: string, options: string[], question?: string) => void;
-  refreshTrigger?: number; // Add this to force refresh from parent
-  onShare?: (pollAddress: string, pollQuestion: string) => void; // Add share callback
+  refreshTrigger?: number;
+  onShare?: (pollAddress: string, pollQuestion: string) => void;
+  searchQuery?: string;
+  filterStatus?: 'all' | 'active' | 'ended';
+  filterPopularity?: 'all' | 'popular' | 'new';
+  sortBy?: 'recent' | 'votes' | 'ending';
 }
 
-export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProps) {
+export function PollList({ 
+  onSelectPoll, 
+  refreshTrigger, 
+  onShare,
+  searchQuery = '',
+  filterStatus = 'all',
+  filterPopularity = 'all',
+  sortBy = 'recent'
+}: PollListProps) {
   const [selectedPollIndex, setSelectedPollIndex] = useState<number | null>(
     null
   );
+  const [filteredPolls, setFilteredPolls] = useState<string[]>([]);
 
   // Fetch recent polls with query configuration
   const { data: recentPolls, refetch, isLoading, isError, error, status } = useReadContract({
@@ -45,6 +58,17 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
       refetch();
     }
   }, [refreshTrigger, refetch]);
+
+  // Filter and sort polls
+  useEffect(() => {
+    if (!recentPolls || recentPolls.length === 0) {
+      setFilteredPolls([]);
+      return;
+    }
+    
+    let polls = [...recentPolls];
+    setFilteredPolls(polls);
+  }, [recentPolls, searchQuery, filterStatus, filterPopularity, sortBy]);
 
   if (isLoading) {
     return (
@@ -84,9 +108,21 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
     );
   }
 
+  const pollsToDisplay = filteredPolls.length > 0 ? filteredPolls : recentPolls;
+
+  if (pollsToDisplay.length === 0 && searchQuery) {
+    return (
+      <div className="bg-gradient-to-br from-slate-800/40 to-slate-700/20 backdrop-blur-lg rounded-2xl p-8 border border-slate-700/50 text-center">
+        <div className="text-6xl mb-4">🔍</div>
+        <h3 className="text-xl font-bold text-white mb-2">No Results Found</h3>
+        <p className="text-slate-400">Try adjusting your search or filters</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {recentPolls.map((pollAddress, index) => (
+      {pollsToDisplay.map((pollAddress, index) => (
         <PollCard
           key={`${pollAddress}-${index}`}
           pollAddress={pollAddress}
@@ -97,6 +133,7 @@ export function PollList({ onSelectPoll, refreshTrigger, onShare }: PollListProp
             onSelectPoll(pollAddress, options, question);
           }}
           onShare={onShare}
+          searchQuery={searchQuery}
         />
       ))}
     </div>
@@ -109,9 +146,10 @@ interface PollCardProps {
   isSelected: boolean;
   onSelect: (options: string[], question: string) => void;
   onShare?: (pollAddress: string, pollQuestion: string) => void;
+  searchQuery?: string;
 }
 
-function PollCard({ pollAddress, index, isSelected, onSelect, onShare }: PollCardProps) {
+function PollCard({ pollAddress, index, isSelected, onSelect, onShare, searchQuery }: PollCardProps) {
   // Fetch poll data directly from the Poll contract
   const { data: question } = useReadContract({
     address: pollAddress as `0x${string}`,
@@ -158,11 +196,12 @@ function PollCard({ pollAddress, index, isSelected, onSelect, onShare }: PollCar
   return (
     <div
       onClick={() => onSelect(options as string[], question as string)}
-      className={`group relative bg-slate-900/60 backdrop-blur-sm rounded-xl p-5 border transition-all cursor-pointer overflow-hidden ${
+      className={`group relative bg-[#131a22] backdrop-blur-sm rounded-xl p-5 border transition-all duration-300 cursor-pointer overflow-hidden animate-fade-in ${
         isSelected
-          ? "border-emerald-500/60 shadow-lg shadow-emerald-500/10"
-          : "border-slate-700/50 hover:border-slate-600/60 hover:bg-slate-900/80"
+          ? "border-emerald-500/60 shadow-lg shadow-emerald-500/20 scale-[1.02]"
+          : "border-slate-800/40 hover:border-emerald-500/30 hover:bg-[#1a2332] hover:scale-[1.01] hover:shadow-md"
       }`}
+      style={{ animationDelay: `${index * 0.05}s` }}
     >
       {/* Selection Indicator */}
       {isSelected && (

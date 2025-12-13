@@ -59,7 +59,9 @@ contract DeployLocalScript is Script {
             "What should we prioritize for the next quarter?",
             options,
             7 days,
-            10  // 10x max weight cap
+            10,  // 10x max weight cap
+            0,   // Quadratic voting
+            false // Voter choice
         );
         
         console.log("Demo Poll deployed at:", demoPoll);

@@ -29,6 +29,8 @@ export function CreatePollModal({
   const [options, setOptions] = useState(initialOptions);
   const [duration, setDuration] = useState(initialDuration);
   const [maxWeightCap, setMaxWeightCap] = useState(initialMaxWeightCap);
+  const [votingMethod, setVotingMethod] = useState<0 | 1 | 2>(0); // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
+  const [isVotingMethodLocked, setIsVotingMethodLocked] = useState(false);
 
   // IMPORTANT: only apply initial values ONCE when the modal opens.
   // Otherwise parent re-renders (e.g. new array references) will overwrite the user's typing.
@@ -119,6 +121,8 @@ export function CreatePollModal({
           validOptions,
           BigInt(duration * 24 * 60 * 60), // Convert days to seconds
           BigInt(maxWeightCap),
+          votingMethod, // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
+          isVotingMethodLocked, // true=locked, false=voter choice
         ],
       });
 
@@ -292,6 +296,72 @@ export function CreatePollModal({
                 </div>
                 <p className="text-xs text-slate-400 mt-2">
                   Limits maximum vote influence to prevent whale dominance
+                </p>
+              </div>
+
+              {/* Voting Method */}
+              <div>
+                <label className="text-slate-200 text-sm font-medium block mb-3">
+                  Voting Method
+                </label>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setVotingMethod(0)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      votingMethod === 0
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    Quadratic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVotingMethod(1)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      votingMethod === 1
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    Simple
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVotingMethod(2)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      votingMethod === 2
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-800/40 text-slate-400 border-slate-700/40 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    Weighted
+                  </button>
+                </div>
+                
+                {/* Lock Method Option */}
+                <label className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={isVotingMethodLocked}
+                    onChange={(e) => setIsVotingMethodLocked(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-0 bg-slate-700"
+                  />
+                  <div className="flex-1">
+                    <span className="text-white text-sm font-medium">Lock Voting Method</span>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {isVotingMethodLocked 
+                        ? 'All voters will use the selected method'
+                        : 'Voters can choose their preferred method'}
+                    </p>
+                  </div>
+                </label>
+
+                <p className="text-xs text-slate-400 mt-3">
+                  <strong>Quadratic:</strong> √credits (fairer for smaller bets)<br/>
+                  <strong>Simple:</strong> credits (linear)<br/>
+                  <strong>Weighted:</strong> credits × 1.5 (amplified)
                 </p>
               </div>
             </div>

@@ -30,24 +30,25 @@ export function Navigation({ onCreateClick, showCreateButton = true }: Navigatio
   return (
     <>
       {/* Testnet Banner */}
-      <div className="bg-amber-500/20 border-b border-amber-500/30 py-2 z-50">
+      <div className="bg-emerald-500/10 border-b border-emerald-500/20 py-2 z-50">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <span className="text-amber-400 font-semibold text-sm">
-            🚧 TESTNET DEMO - Using Free Mock Tokens (No Real Money)
+          <span className="text-emerald-400 font-medium text-sm flex items-center justify-center gap-2">
+            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            TESTNET DEMO - Using Free Mock Tokens (No Real Money)
           </span>
         </div>
       </div>
 
-      <nav className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-slate-800/60">
+      <nav className="sticky top-0 z-40 bg-[#0f1419] border-b border-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-bold text-slate-900">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-500/30">
                 R
               </div>
-              <span className="text-xl font-bold text-white">RepVote</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">RepVote</span>
             </Link>
             
             {/* Navigation Links */}
@@ -116,7 +117,7 @@ export function Navigation({ onCreateClick, showCreateButton = true }: Navigatio
             </div>
           </div>
         </div>
-      </div>
+        </div>
       </nav>
     </>
   );

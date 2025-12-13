@@ -43,19 +43,24 @@ contract PollFactory {
      * @param options Array of option strings
      * @param duration Duration in seconds
      * @param maxWeightCap Maximum vote weight as multiple of average (e.g., 10 = 10x)
+     * @param votingMethod Voting method (0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED)
+     * @param isVotingMethodLocked If true, all voters must use votingMethod; if false, voters choose
      * @return pollAddress Address of newly created poll
      */
     function createPoll(
         string memory question,
         string[] memory options,
         uint256 duration,
-        uint256 maxWeightCap
+        uint256 maxWeightCap,
+        uint8 votingMethod,
+        bool isVotingMethodLocked
     ) external returns (address pollAddress) {
         require(options.length >= 2, "Need at least 2 options");
         require(options.length <= 10, "Too many options");
         require(duration >= 1 hours, "Duration too short");
         require(duration <= 30 days, "Duration too long");
         require(maxWeightCap >= 2 && maxWeightCap <= 20, "Invalid cap");
+        require(votingMethod <= 2, "Invalid voting method");
         
         // Deploy new Poll contract
         Poll newPoll = new Poll(
@@ -64,7 +69,9 @@ contract PollFactory {
             question,
             options,
             duration,
-            maxWeightCap
+            maxWeightCap,
+            votingMethod,
+            isVotingMethodLocked
         );
         
         pollAddress = address(newPoll);
