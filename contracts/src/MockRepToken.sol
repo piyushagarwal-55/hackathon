@@ -42,7 +42,7 @@ contract MockRepToken is ERC20, Ownable {
     
     // ============ Constructor ============
     
-    constructor() ERC20("RepVote Token", "REP") Ownable(msg.sender) {
+    constructor() ERC20("RepVote Token", "REP") Ownable() {
         // Mint initial supply to deployer for liquidity/testing
         _mint(msg.sender, INITIAL_SUPPLY);
     }

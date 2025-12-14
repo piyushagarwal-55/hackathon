@@ -3,13 +3,13 @@
  * Deployed on Arbitrum Sepolia Testnet
  * 
  * Generated automatically by update-frontend-config.js
- * Last updated: 2025-12-13T21:58:43.474Z
+ * Last updated: 2025-12-14T02:30:00.000Z
  */
 
 // Deployed contract addresses (Arbitrum Sepolia - Chain ID: 421614)
-export const MOCK_TOKEN_ADDRESS = "0x78e566e5b7b10c8c93d622382d6a27d960a3d76a" as `0x${string}`;
-export const REPUTATION_REGISTRY_ADDRESS = "0x61f88d86a35ebf51aeae219a826d64cc3d379066" as `0x${string}`;
-export const POLL_FACTORY_ADDRESS = "0x531bddf664d17d7c6eed945b4d9e48b4709df21e" as `0x${string}`;
+export const MOCK_TOKEN_ADDRESS = "0xE407D9fd30d2E15038f0fe90A7CB3B466Ca51138" as `0x${string}`;
+export const REPUTATION_REGISTRY_ADDRESS = "0x032FE3F6D81a9Baca0576110090869Efe81a6AA7" as `0x${string}`;
+export const POLL_FACTORY_ADDRESS = "0xB4c9c8bFdD29Fb6c727A1fd11b769BCA1988cb4B" as `0x${string}`;
 
 // Full ABIs from compiled contracts
 export const MOCK_TOKEN_ABI = [

@@ -11,8 +11,8 @@
 
 ### Smart Contracts (Arbitrum Sepolia)
 
-- ✅ **ReputationRegistry**: `0x45b836A4a501699d428119D481186804ACeD9C9C`
-- ✅ **PollFactory**: `0xdAbBF35331822FFf0C0c2B56EaE2d0cdeC4971A4`
+- ✅ **ReputationRegistry**: `0x032FE3F6D81a9Baca0576110090869Efe81a6AA7`
+- ✅ **PollFactory**: `0xB4c9c8bFdD29Fb6c727A1fd11b769BCA1988cb4B`
 - ✅ **Network**: Arbitrum Sepolia Testnet (Chain ID: 421614)
 - ✅ **Explorer**: https://sepolia.arbiscan.io/
 
