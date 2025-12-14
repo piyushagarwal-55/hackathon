@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Coins, Loader2 } from "lucide-react";
 import { MOCK_TOKEN_ADDRESS, ERC20_ABI } from "@/lib/contracts";
@@ -30,12 +30,35 @@ export function TokenFaucet() {
     functionName: "symbol",
   });
 
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContract, data: hash, isPending, reset } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash,
     });
+
+  // Handle confirmation in useEffect (proper way)
+  useEffect(() => {
+    if (isConfirmed && hash) {
+      console.log("Faucet transaction confirmed!");
+      toast.success("1000 REP tokens received! 🎉");
+      
+      // Wait a bit for blockchain to update, then refetch
+      setTimeout(() => {
+        refetchBalance();
+        setIsRequesting(false);
+        reset();
+      }, 1000);
+    }
+  }, [isConfirmed, hash, refetchBalance, reset]);
+
+  // Handle when user rejects or transaction fails
+  useEffect(() => {
+    if (!isPending && !isConfirming && isRequesting && !hash) {
+      // User likely rejected the transaction
+      setIsRequesting(false);
+    }
+  }, [isPending, isConfirming, isRequesting, hash]);
 
   const handleFaucet = async () => {
     if (!address) {
@@ -45,26 +68,36 @@ export function TokenFaucet() {
 
     try {
       setIsRequesting(true);
+      console.log("Requesting tokens from faucet...");
+      
       writeContract({
         address: MOCK_TOKEN_ADDRESS,
         abi: ERC20_ABI,
         functionName: "faucet",
+        gas: 100000n, // Add gas limit
       });
 
-      toast.success("Faucet request submitted!");
+      toast.info("Please confirm the transaction in MetaMask");
     } catch (error: any) {
       console.error("Faucet error:", error);
-      toast.error(error?.message || "Failed to request tokens");
+      
+      // Parse specific error messages
+      const errorMsg = error?.message || error?.shortMessage || '';
+      
+      if (errorMsg.includes('User rejected') || errorMsg.includes('User denied')) {
+        toast.error("Transaction cancelled");
+      } else if (errorMsg.includes('CooldownActive')) {
+        toast.error("⏰ Cooldown active - please wait before claiming again");
+      } else if (errorMsg.includes('FaucetDisabled')) {
+        toast.error("🚫 Faucet is currently disabled");
+      } else if (errorMsg.includes('MaxSupplyExceeded')) {
+        toast.error("📊 Maximum supply reached");
+      } else {
+        toast.error(error?.shortMessage || "Failed to request tokens");
+      }
       setIsRequesting(false);
     }
   };
-
-  // Handle confirmation
-  if (isConfirmed && isRequesting) {
-    setIsRequesting(false);
-    refetchBalance();
-    toast.success("1000 REP tokens received! 🎉");
-  }
 
   const formattedBalance = balance
     ? parseFloat(formatUnits(balance, 18)).toFixed(2)
@@ -103,9 +136,8 @@ export function TokenFaucet() {
       </button>
 
       <p className="text-xs text-slate-400 mt-2 text-center">
-        ⚠️ Testnet only - Free mock tokens for demo
+        ⚠️ Testnet only • Unlimited free tokens
       </p>
     </div>
   );
 }
-

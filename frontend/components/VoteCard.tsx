@@ -1,12 +1,11 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI, POLL_ABI } from '@/lib/contracts';
+import { REPUTATION_REGISTRY_ADDRESS, REPUTATION_REGISTRY_ABI, POLL_ABI, MOCK_TOKEN_ADDRESS, ERC20_ABI } from '@/lib/contracts';
 import { calculateVoteWeight } from '@/lib/calculations';
 import { toast } from 'sonner';
 import { CheckCircle2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { parseUnits } from 'viem';
 
 interface VoteCardProps {
   pollAddress: `0x${string}`;
@@ -47,8 +46,46 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
     },
   });
 
+  // Get user's token balance
+  const { data: tokenBalance, refetch: refetchBalance } = useReadContract({
+    address: MOCK_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && isConnected,
+      refetchInterval: 10000,
+    },
+  });
+
+  // Get token allowance
+  const { data: tokenAllowance, refetch: refetchAllowance } = useReadContract({
+    address: MOCK_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: 'allowance',
+    args: address && pollAddress ? [address, pollAddress] : undefined,
+    query: {
+      enabled: !!address && isConnected && !isZeroAddress,
+      refetchInterval: 10000,
+    },
+  });
+
   // Write contract function
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+
+  // Separate hook for approvals
+  const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
+  const { isLoading: isApproveConfirming, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
+    hash: approveHash,
+  });
+
+  // Refetch allowance when approval is successful
+  useEffect(() => {
+    if (isApproveSuccess) {
+      toast.success('✅ Token approval successful!');
+      setTimeout(() => refetchAllowance(), 1000);
+    }
+  }, [isApproveSuccess, refetchAllowance]);
 
 
 
@@ -153,6 +190,21 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
       return;
     }
 
+    // Convert credits to token amount
+    const tokenAmount = parseUnits(creditsSpent.toString(), 18);
+
+    // Check if user has enough tokens
+    if (!tokenBalance || tokenBalance < tokenAmount) {
+      toast.error('Insufficient REP tokens. Get free tokens from the faucet!');
+      return;
+    }
+
+    // Check if approval is needed
+    if (!tokenAllowance || tokenAllowance < tokenAmount) {
+      toast.error('Please approve REP tokens first using the Approve button');
+      return;
+    }
+
     try {
       console.log('📝 Submitting vote:', {
         poll: pollAddress,
@@ -161,12 +213,16 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
         expectedWeight: weightedVotes.toFixed(2)
       });
       
+      // Convert credits to token amount (1 credit = 1 token = 1e18 wei)
+      const tokenAmount = parseUnits(creditsSpent.toString(), 18);
+      // Use quadratic voting method by default (0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED)
+      const votingMethod = 0;
       
       writeContract({
         address: pollAddress,
         abi: POLL_ABI,
         functionName: 'vote',
-        args: [BigInt(selectedOption), BigInt(creditsSpent)],
+        args: [BigInt(selectedOption), tokenAmount, votingMethod],
       });
       
       toast.info('Transaction submitted - waiting for confirmation...');
@@ -182,6 +238,29 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
       } else {
         toast.error(error.shortMessage || error.message || 'Failed to cast vote');
       }
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!isConnected) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
+    const tokenAmount = parseUnits(creditsSpent.toString(), 18);
+
+    try {
+      writeApprove({
+        address: MOCK_TOKEN_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: 'approve',
+        args: [pollAddress, tokenAmount],
+        gas: 50000n,
+      });
+      toast.info('Approval transaction submitted...');
+    } catch (error: any) {
+      console.error('Approval error:', error);
+      toast.error(error.shortMessage || error.message || 'Failed to approve tokens');
     }
   };
 
@@ -281,26 +360,46 @@ export function VoteCard({ pollAddress, options, onVoteSuccess }: VoteCardProps)
         </div>
       </div>
 
-      {/* Vote Button */}
-      <button
-        onClick={handleVote}
-        disabled={selectedOption === null || isPending || isConfirming || !isConnected}
-        className={`w-full py-3 rounded-lg font-semibold text-sm transition-all ${
-          selectedOption === null || !isConnected
-            ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
-            : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/20'
-        }`}
-      >
-        {!isConnected
-          ? 'Connect Wallet'
-          : isPending
-          ? '🔐 Confirm...'
-          : isConfirming
-          ? '⏳ Voting...'
-          : isSuccess
-          ? '✅ Done'
-          : 'Submit Vote'}
-      </button>
+      {/* Approve and Vote Buttons */}
+      <div className="space-y-3">
+        {/* Show approve button if not enough allowance */}
+        {isConnected && tokenAllowance !== undefined && tokenAllowance < parseUnits(creditsSpent.toString(), 18) && (
+          <button
+            onClick={handleApprove}
+            disabled={isApprovePending || isApproveConfirming}
+            className="w-full py-3 rounded-lg font-semibold text-sm transition-all bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 hover:shadow-lg hover:shadow-blue-500/20"
+          >
+            {isApprovePending
+              ? '🔐 Confirm Approval...'
+              : isApproveConfirming
+              ? '⏳ Approving...'
+              : '1️⃣ Approve REP Tokens'}
+          </button>
+        )}
+        
+        {/* Vote Button */}
+        <button
+          onClick={handleVote}
+          disabled={selectedOption === null || isPending || isConfirming || !isConnected}
+          className={`w-full py-3 rounded-lg font-semibold text-sm transition-all ${
+            selectedOption === null || !isConnected
+              ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-500/20'
+          }`}
+        >
+          {!isConnected
+            ? 'Connect Wallet'
+            : isPending
+            ? '🔐 Confirm...'
+            : isConfirming
+            ? '⏳ Voting...'
+            : isSuccess
+            ? '✅ Done'
+            : tokenAllowance !== undefined && tokenAllowance < parseUnits(creditsSpent.toString(), 18)
+            ? '2️⃣ Submit Vote (Approve First)'
+            : 'Submit Vote'}
+        </button>
+      </div>
 
       {isSuccess && (
         <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-center">

@@ -30,7 +30,7 @@ export function CreatePollModal({
   const [duration, setDuration] = useState(initialDuration);
   const [durationUnit, setDurationUnit] = useState<
     "minutes" | "hours" | "days"
-  >("minutes");
+  >("hours");
   const [maxWeightCap, setMaxWeightCap] = useState(initialMaxWeightCap);
   const [votingMethod, setVotingMethod] = useState<0 | 1 | 2>(0); // 0=QUADRATIC, 1=SIMPLE, 2=WEIGHTED
   const [isVotingMethodLocked, setIsVotingMethodLocked] = useState(false);
@@ -48,8 +48,8 @@ export function CreatePollModal({
     didInitOnOpenRef.current = true;
     setQuestion(initialQuestion);
     setOptions(initialOptions.length >= 2 ? initialOptions : ["", ""]);
-    setDuration(1); // Default to 1 minute for quick testing
-    setDurationUnit("minutes");
+    setDuration(1); // Default to 1 hour (contract minimum)
+    setDurationUnit("hours");
     setMaxWeightCap(initialMaxWeightCap);
   }, [
     isOpen,
@@ -83,7 +83,7 @@ export function CreatePollModal({
           setQuestion("");
           setOptions(["", ""]);
           setDuration(1);
-          setDurationUnit("minutes");
+          setDurationUnit("hours");
           setMaxWeightCap(10);
           reset();
         }, 500);
@@ -131,6 +131,17 @@ export function CreatePollModal({
           : durationUnit === "hours"
           ? duration * 60 * 60
           : duration * 24 * 60 * 60; // days
+
+      // Validate contract requirements
+      if (durationInSeconds < 3600) { // 1 hour minimum
+        toast.error("Duration must be at least 1 hour (contract requirement)");
+        return;
+      }
+      
+      if (durationInSeconds > 30 * 24 * 60 * 60) { // 30 days maximum
+        toast.error("Duration cannot exceed 30 days (contract requirement)");
+        return;
+      }
 
       writeContract({
         address: POLL_FACTORY_ADDRESS,
@@ -321,6 +332,9 @@ export function CreatePollModal({
                       : "30 days"}
                   </span>
                 </div>
+                <p className="text-xs text-amber-400/70 mt-2">
+                  ⚠️ Minimum duration: 1 hour (contract requirement)
+                </p>
               </div>
 
               {/* Weight Cap */}
