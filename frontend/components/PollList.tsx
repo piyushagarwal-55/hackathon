@@ -142,30 +142,34 @@ export function PollList({
         <p className="text-slate-400 mb-4">
           Create the first poll to get started!
         </p>
-        <div className="mt-6 p-4 bg-amber-950/30 border border-amber-500/30 rounded-lg">
-          <p className="text-amber-400 text-sm font-semibold mb-2">
-            ⚠️ Setup Required
+        <div className="mt-6 p-4 bg-blue-950/30 border border-blue-500/30 rounded-lg">
+          <p className="text-blue-400 text-sm font-semibold mb-2">
+            💡 Ready to Start
           </p>
           <p className="text-slate-300 text-xs mb-3">
-            To create polls, ensure your local blockchain is running:
+            Contracts are deployed on Arbitrum Sepolia testnet:
           </p>
           <ol className="text-left text-slate-400 text-xs space-y-1 max-w-md mx-auto">
             <li>
-              1. Start Anvil:{" "}
-              <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">
-                anvil --host 0.0.0.0 --cors-origins "*"
-              </code>
+              1. Make sure you're connected to{" "}
+              <span className="text-emerald-400 font-semibold">Arbitrum Sepolia</span> in MetaMask
             </li>
             <li>
-              2. Deploy contracts:{" "}
-              <code className="text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded">
-                forge script script/DeployLocal.s.sol --broadcast --rpc-url
-                http://localhost:8545
-              </code>
+              2. Get free test ETH from{" "}
+              <a 
+                href="https://faucet.quicknode.com/arbitrum/sepolia" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                faucet
+              </a>
             </li>
             <li>
-              3. Connect MetaMask to Anvil (Chain ID: 31337, RPC:
-              http://localhost:3000/api/rpc)
+              3. Click "Get Free Tokens" to mint REP tokens
+            </li>
+            <li>
+              4. Create your first poll!
             </li>
           </ol>
         </div>
